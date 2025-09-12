@@ -1,9 +1,17 @@
+// src/js/encrypt.js
+
 // Data Encryption for Sensitive Info
-function encryptData(data, key) {
+function encryptData(data) {
     // Demo: dùng base64, có thể thay bằng AES
-    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    // Mã hóa một chuỗi đơn giản, không cần JSON.stringify
+    return btoa(unescape(encodeURIComponent(data)));
 }
-function decryptData(encrypted, key) {
-    return JSON.parse(decodeURIComponent(escape(atob(encrypted))));
+
+function decryptData(encrypted) {
+    // Giải mã một chuỗi đơn giản
+    return decodeURIComponent(escape(atob(encrypted)));
 }
-// ...Thêm các hàm bảo mật nâng cao nếu cần
+
+// MỚI: Gán các hàm vào window để các tệp khác có thể gọi
+window.encryptData = encryptData;
+window.decryptData = decryptData;

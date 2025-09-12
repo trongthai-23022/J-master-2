@@ -12,8 +12,6 @@
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
    <script type="module" src="src/js/app.js"></script>
-   <script type="module" src="src/js/logging.js"></script>
-   <script type="module" src="src/js/error.js"></script>
    <style>
        /* ...existing style code... */
    </style>
@@ -77,35 +75,70 @@
     </div>
 
     <!-- Modal Settings -->
-    <div id="modal-settings" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
-       <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
-          <h2 class="font-semibold text-lg mb-4">Cài đặt</h2>
-          <div class="space-y-3">
-             <div>
-                <label class="block text-sm font-medium">Ngôn ngữ giao diện</label>
-                <select id="settings-lang" class="w-full border rounded px-2 py-1">
-                   <option value="vi">Tiếng Việt</option>
-                   <option value="en">English</option>
-                   <option value="jp">日本語</option>
-                </select>
-             </div>
-             <div>
-                <label class="block text-sm font-medium">Chủ đề</label>
-                <select id="settings-theme" class="w-full border rounded px-2 py-1">
-                   <option value="light">Sáng</option>
-                   <option value="dark">Tối</option>
-                </select>
-             </div>
-             <div>
-                <label class="block text-sm font-medium">Cảnh báo bộ nhớ</label>
-                <input type="checkbox" id="settings-storage-warning" class="mr-2">Bật cảnh báo
-             </div>
-          </div>
-          <div class="flex justify-end gap-2 mt-6">
-             <button id="btn-settings-cancel" class="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">Hủy</button>
-             <button id="btn-settings-save" class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Lưu</button>
-          </div>
-       </div>
+     <div id="modal-settings" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+   <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
+      <h2 class="font-semibold text-lg mb-4">Cài đặt</h2>
+      <div class="space-y-4"> <div>
+            <label class="block text-sm font-medium text-gray-700">Ngôn ngữ giao diện</label>
+            <select id="settings-lang" class="w-full border rounded px-2 py-1 mt-1">
+               <option value="vi">Tiếng Việt</option>
+               <option value="en">English</option>
+               <option value="jp">日本語</option>
+            </select>
+         </div>
+         <div>
+            <label class="block text-sm font-medium text-gray-700">Chủ đề</label>
+            <select id="settings-theme" class="w-full border rounded px-2 py-1 mt-1">
+               <option value="light">Sáng</option>
+               <option value="dark">Tối</option>
+            </select>
+         </div>
+         <div>
+            <label for="api-key-input" class="block text-sm font-medium text-gray-700">Khóa API Gemini</label>
+            <input type="password" id="api-key-input" placeholder="dán khóa API của bạn vào đây" class="w-full border rounded px-3 py-2 mt-1">
+            <p class="text-xs text-gray-500 mt-1">Cần thiết cho chức năng "Tạo Truyện Chêm AI". Khóa chỉ được lưu trên trình duyệt này.</p>
+         </div>
+         <div>
+            <label class="flex items-center text-sm font-medium text-gray-700">
+               <input type="checkbox" id="settings-storage-warning" class="mr-2">Bật cảnh báo bộ nhớ
+            </label>
+         </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+         <button id="btn-settings-cancel" class="btn-cancel px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">Hủy</button>
+         <button id="btn-settings-save" class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Lưu</button>
+      </div>
+   </div>
     </div>
+    <div id="add-edit-word-modal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+   <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
+      <h3 id="word-modal-title" class="text-xl font-bold mb-4">Thêm từ mới</h3>
+      <input type="hidden" id="word-id-input">
+      <input type="hidden" id="word-list-name-input">
+      
+      <div class="space-y-4">
+         <input type="text" id="kanji-input" placeholder="Kanji / Từ vựng" class="w-full border rounded px-3 py-2">
+         <input type="text" id="reading-input" placeholder="Cách đọc (Hiragana)" class="w-full border rounded px-3 py-2">
+         <input type="text" id="meaning-input" placeholder="Ý nghĩa" class="w-full border rounded px-3 py-2">
+      </div>
+      
+      <div class="flex justify-end gap-3 mt-6">
+         <button class="btn-cancel px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">Hủy</button>
+         <button id="save-word-btn" class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Lưu</button>
+      </div>
+   </div>
+</div>
+
+<div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+    <div class="modal-content bg-white rounded shadow-lg p-6 w-full max-w-sm text-center">
+        <h3 class="text-xl font-bold mb-4" id="confirm-delete-title">Xác nhận xóa</h3>
+        <p id="confirm-delete-message" class="mb-6 text-gray-700"></p>
+        <div class="flex justify-center gap-4">
+            <button class="btn-cancel px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Hủy</button>
+            <button id="confirm-delete-btn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Xóa</button>
+        </div>
+    </div>
+</div>
+<input type="file" id="import-file-input" class="hidden" accept=".json">
 </body>
 </html>
