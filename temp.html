@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>J-Master: Học Từ Vựng Tiếng Nhật</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+   <style>
+       :root {
+           --primary-color: #4f46e5;
+           --primary-hover: #4338ca;
+           --secondary-color: #e0e7ff;
+           --secondary-hover: #c7d2fe;
+           --danger-color: #ef4444;
+           --danger-hover: #dc2626;
+           --green-color: #10b981;
+           --green-hover: #059669;
+           --bg-light: #f8fafc;
+           --bg-base: #f1f5f9;
+           --border-color: #e2e8f0;
+           --text-main: #1e293b;
+           --text-light: #64748b;
+       }
+       html, body { scroll-behavior: smooth; }
+       body {
+           font-family: 'Inter', sans-serif;
+           background-color: var(--bg-base);
+           color: var(--text-main);
+       }
+       .jp-font { font-family: 'Noto Sans JP', sans-serif; }
+       .main-container { width: 100%; max-width: 1200px; margin: auto; }
+       .screen { display: none; }
+       .screen.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+       .btn {
+           padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600;
+           transition: all 0.2s ease; border: none; cursor: pointer;
+           display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+       }
+       .btn:active { transform: scale(0.97); }
+       .btn-primary { background-color: var(--primary-color); color: white; }
+       .btn-primary:hover { background-color: var(--primary-hover); }
+       .btn-secondary { background-color: var(--secondary-color); color: var(--primary-hover); }
+       .btn-secondary:hover { background-color: var(--secondary-hover); }
+       .btn-danger { background-color: var(--danger-color); color: white; }
+       .btn-danger:hover { background-color: var(--danger-hover); }
+       .btn-green { background-color: var(--green-color); color: white; }
+       .btn-green:hover { background-color: var(--green-hover); }
+       
+       .modal {
+           display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+           background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+       }
+       .modal.active { display: flex; animation: fadeIn 0.3s; }
+       .modal-content {
+           background-color: #fff; padding: 2rem; border-radius: 1.5rem;
+           width: 90%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+           animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+       }
+       @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+       /* Component Styles */
+       .card-base { background-color: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+       .card-base:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); }
+       .input-base { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; transition: all 0.2s; }
+       .input-base:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--secondary-color); outline: none; }
+       
+       /* Game Card Styles */
+       .game-card {
+           background-color: white; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s;
+           position: relative; aspect-ratio: 4 / 3; display: flex; justify-content: center;
+           align-items: center; padding: 0.25rem; text-align: center; border: 2px solid var(--border-color);
+       }
+       .game-card:hover { transform: translateY(-4px); box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+       .game-card.is-selected { border-color: var(--primary-color); transform: scale(1.05); }
+       .game-card.is-matched { opacity: 0.3; cursor: default; pointer-events: none; }
+       .game-card.is-wrong { animation: shake 0.4s; border-color: var(--danger-color) !important; }
+       @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+       /* Story Mode Styles */
+       #cloze-story { font-size: 1.5rem; line-height: 2.5rem; background: var(--bg-light); padding: 1.5rem; border-radius: 0.5rem; min-height: 100px; }
+       .word-bank-item { cursor: grab; user-select: none; }
+       .cloze-blank {
+           display: inline-block; width: 120px; height: 40px; background: var(--secondary-color);
+           border-radius: 6px; border: 2px dashed #a5b4fc; margin: 0 4px; vertical-align: bottom;
+       }
+       .drag-over { border-style: solid; background-color: #c7d2fe; }
+   </style>
+</head>
+<body class="p-4 md:p-6">
+
+   <div class="main-container">
+
+       <!-- ===== Main Dashboard Screen ===== -->
+       <div id="dashboard-screen" class="screen active">
+           <header class="text-center mb-10">
+               <div class="flex flex-col sm:flex-row sm:justify-between items-center gap-4">
+                   <h1 class="text-3xl sm:text-5xl font-bold text-gray-800 jp-font mb-2 sm:mb-0">J-Master</h1>
+                   <button id="show-settings-modal-btn" class="btn btn-secondary px-3 py-2 rounded-lg text-base sm:text-lg font-semibold w-full sm:w-auto" title="Cài đặt">
+                       Cài đặt
+                   </button>
+               </div>
+               <p class="jp-font text-xl text-indigo-600 mt-1">あなたの日本語学習パートナー</p>
+               <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Công cụ học từ vựng cá nhân, mạnh mẽ, hoạt động hoàn toàn trên trình duyệt của bạn.</p>
+           </header>
+           <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+               <div class="card-base p-8 text-center">
+                   <h2 class="text-2xl font-bold mb-4">Học & Luyện tập</h2>
+                   <p class="text-gray-500 mb-6">Chọn bộ từ và bắt đầu học với game ghép thẻ hoặc tạo truyện chêm AI.</p>
+                   <button id="go-to-learn-btn" class="btn btn-primary">Vào học</button>
+               </div>
+               <div class="card-base p-8 text-center">
+                   <h2 class="text-2xl font-bold mb-4">Quản lý Từ vựng</h2>
+                   <p class="text-gray-500 mb-6">Thêm, sửa, xóa, và nhập hàng loạt các bộ từ vựng của riêng bạn.</p>
+                   <button id="go-to-manager-btn" class="btn btn-secondary">Quản lý</button>
+               </div>
+           </div>
+       </div>
+       
+       <div id="list-selection-screen" class="screen card-base p-6 md:p-8"></div>
+       <div id="settings-screen" class="screen card-base p-6 md:p-8"></div>
+       <div id="game-screen" class="screen card-base p-6 md:p-8"></div>
+       <div id="results-screen" class="screen card-base p-8 text-center"></div>
+       <div id="story-mode-screen" class="screen card-base p-6 md:p-8"></div>
+       <div id="manager-screen" class="screen card-base p-6 md:p-8"></div>
+   </div>
+
+   <!-- Modals -->
+   <div id="add-word-list-modal" class="modal"></div>
+   <div id="add-edit-word-modal" class="modal"></div>
+   <div id="import-modal" class="modal"></div>
+   <div id="confirm-delete-modal" class="modal">
+       <div class="modal-content">
+           <h3 class="text-xl font-bold mb-4" id="confirm-delete-title">Xác nhận xóa</h3>
+           <p id="confirm-delete-message" class="mb-6 text-gray-700 text-center"></p>
+           <div class="flex justify-end gap-3">
+               <button class="btn btn-secondary close-modal">Hủy</button>
+               <button id="confirm-delete-btn" class="btn btn-danger">Xóa</button>
+           </div>
+       </div>
+   </div>
+   <div id="settings-modal" class="modal">
+       <div class="modal-content">
+           <h3 class="text-2xl font-bold mb-4">Cài đặt</h3>
+           <div class="space-y-2">
+               <label for="api-key-input" class="font-semibold text-gray-700">Khóa API Gemini</label>
+               <input type="password" id="api-key-input" placeholder="Nhập khóa API của bạn ở đây" class="input-base">
+               <p class="text-xs text-gray-500">Khóa API cần thiết cho chức năng "Tạo Truyện Chêm". Khóa của bạn chỉ được lưu trên trình duyệt này.</p>
+           </div>
+           <div id="save-key-feedback" class="text-green-600 text-sm mt-4 text-center hidden"></div>
+           <div class="flex justify-end gap-3 mt-6">
+               <button class="btn btn-secondary close-modal">Đóng</button>
+               <button id="save-api-key-btn" class="btn btn-primary">Lưu</button>
+           </div>
+       </div>
+   </div>
+
+   <script>
+   document.addEventListener('DOMContentLoaded', () => {
+       // --- INITIAL DATA & APP CONFIG ---
+       const initialVocabulary = {
+           "N2 Mẫu (401-410)": [
+               { id: 401, kanji: "反抗", reading: "はんこう", meaning: "Sự phản kháng, nổi loạn" }, { id: 402, kanji: "無駄", reading: "むだ", meaning: "Vô ích, lãng phí" }, { id: 403, kanji: "休暇", reading: "きゅうか", meaning: "Kì nghỉ (có phép)" }, { id: 404, kanji: "眺める", reading: "ながめる", meaning: "Nhìn, ngắm" }, { id: 405, kanji: "感心", reading: "かんしん", meaning: "Ngưỡng mộ" }, { id: 406, kanji: "発揮", reading: "はっき", meaning: "Phát huy" }, { id: 407, kanji: "尽きる", reading: "つきる", meaning: "Cạn kiệt, hết sạch" }, { id: 408, kanji: "相次ぐ", reading: "あいつぐ", meaning: "Liên tục, nối tiếp" }, { id: 409, kanji: "外す", reading: "はずす", meaning: "Tháo ra, trượt, không trúng" }, { id: 410, kanji: "保つ", reading: "たもつ", meaning: "Bảo vệ, duy trì" },
+           ]
+       };
+       const STORAGE_KEY = 'jMasterVocabApp';
+       const API_KEY_STORAGE = 'jMasterApiKey';
+       let activeVocabularyList = [];
+       let selectedCard = null, isChecking = false, matchedPairs = 0, totalPairs = 0;
+       let timerInterval, seconds = 0;
+       let draggedItem = null;
+       
+       // --- UTILITY FUNCTIONS ---
+       const $ = (selector) => document.querySelector(selector);
+       const $$ = (selector) => document.querySelectorAll(selector);
+       const showScreen = (screenId) => {
+           $$('.screen').forEach(s => s.classList.remove('active'));
+           $(`#${screenId}`)?.classList.add('active');
+       };
+       const showModal = (modalId) => $(`#${modalId}`)?.classList.add('active');
+       const hideAllModals = () => $$('.modal').forEach(m => m.classList.remove('active'));
+       const shuffle = (array) => { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; };
+
+       // --- HTML INJECTION FOR SCREENS AND MODALS ---
+       const injectHTML = () => {
+           $('#list-selection-screen').innerHTML = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold">Chọn Bộ Từ Vựng</h2><button class="btn btn-secondary back-to-dashboard">Trở về</button></div><div class="grid md:grid-cols-2 gap-6"><div class="bg-slate-100 p-4 rounded-lg"><div class="space-y-1" id="word-list-radios"></div></div><div class="bg-slate-100 p-4 rounded-lg"><h3 class="text-lg font-bold mb-2">Xem trước</h3><div id="preview-list" class="max-h-64 overflow-y-auto pr-2"></div></div></div><div class="mt-6 text-center space-y-3 sm:space-y-0 sm:space-x-4"><button id="go-to-match-game-settings-btn" class="btn btn-primary">Chơi Ghép Thẻ</button><div class="inline-block relative group"><button id="create-story-btn" class="btn btn-green">Tạo Truyện Chêm (AI)</button><div id="api-key-tooltip" class="absolute bottom-full mb-2 w-max bg-slate-700 text-white text-xs rounded py-1 px-2 invisible group-hover:visible transition-opacity">Vui lòng nhập API Key trong Cài đặt</div></div></div>`;
+           $('#settings-screen').innerHTML = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold">Tùy Chỉnh Game</h2><button class="btn btn-secondary back-to-list-selection">Quay lại</button></div><div class="grid md:grid-cols-2 gap-6 mb-6"><div class="bg-slate-100 p-4 rounded-lg"><h3 class="font-bold mb-4">1. Thẻ gốc:</h3><div id="cardA-options" class="space-y-2"></div></div><div class="bg-slate-100 p-4 rounded-lg"><h3 class="font-bold mb-4">2. Thẻ ghép:</h3><div id="cardB-options" class="space-y-2"></div></div></div><div class="bg-slate-100 p-4 rounded-lg mb-6"><h3 class="font-bold mb-4">3. Số lượng:</h3><select id="pair-count" class="input-base"></select></div><div class="text-center"><button id="start-game-btn" class="btn btn-primary w-full sm:w-auto">Bắt đầu chơi</button></div>`;
+           $('#game-screen').innerHTML = `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2"><h2 class="text-2xl font-bold text-indigo-700">Hãy tìm các cặp thẻ!</h2><div class="text-right text-lg font-bold"><p>Thời gian: <span id="timer">0</span>s</p><p>Đã ghép: <span id="matched-pairs">0</span>/<span id="total-pairs">0</span></p></div></div><div id="game-board" class="grid gap-2 sm:gap-4 grid-cols-4 md:grid-cols-6 lg:grid-cols-8"></div><div class="mt-6 text-center"><button class="btn btn-secondary back-to-list-selection">Chọn lại bộ từ</button></div>`;
+           $('#results-screen').innerHTML = `<h2 class="text-4xl font-bold text-green-600 mb-4">Hoàn thành!</h2><p class="text-xl mb-2">Thời gian: <span id="final-time" class="font-bold"></span> giây.</p><p class="text-xl mb-8">Số cặp thẻ: <span id="final-pairs" class="font-bold"></span>.</p><div class="flex flex-col sm:flex-row gap-4 justify-center"><button id="play-again-btn" class="btn btn-primary">Chơi lại</button><button class="btn btn-secondary back-to-list-selection">Đổi bộ từ vựng</button></div>`;
+           $('#story-mode-screen').innerHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-3xl font-bold">Tạo Truyện Chêm</h2><button class="btn btn-secondary back-to-list-selection">Quay lại</button></div><div id="story-loader" class="text-center py-10"></div><div id="story-content" class="hidden"></div>`;
+           $('#manager-screen').innerHTML = `<div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold">Quản lý Từ vựng</h2><button class="btn btn-secondary back-to-dashboard">Trở về</button></div><div class="flex flex-wrap gap-4 mb-6"><button id="show-add-list-modal-btn" class="btn btn-primary">Tạo bộ từ mới</button><button id="show-import-modal-btn" class="btn btn-secondary">Nhập hàng loạt (JSON)</button></div><div id="word-lists-container" class="space-y-6"></div>`;
+           $('#cardA-options').innerHTML = `<div><input type="radio" id="a-kanji" name="cardA" value="kanji" checked hidden><label for="a-kanji" class="jp-font p-3 block cursor-pointer rounded-lg">Kanji (例: 反抗)</label></div><div><input type="radio" id="a-reading" name="cardA" value="reading" hidden><label for="a-reading" class="jp-font p-3 block cursor-pointer rounded-lg">Cách đọc (例: はんこう)</label></div>`;
+           $('#cardB-options').innerHTML = `<div><input type="radio" id="b-meaning" name="cardB" value="meaning" checked hidden><label for="b-meaning" class="p-3 block cursor-pointer rounded-lg">Ý nghĩa (Vd: Phản kháng)</label></div><div><input type="radio" id="b-audio" name="cardB" value="audio" hidden><label for="b-audio" class="p-3 block cursor-pointer rounded-lg">Âm thanh 🔊</label></div><div><input type="radio" id="b-kanji" name="cardB" value="kanji" hidden><label for="b-kanji" class="jp-font p-3 block cursor-pointer rounded-lg">Kanji (例: 反抗)</label></div><div><input type="radio" id="b-reading" name="cardB" value="reading" hidden><label for="b-reading" class="jp-font p-3 block cursor-pointer rounded-lg">Cách đọc (例: はんこう)</label></div>`;
+           $('#story-loader').innerHTML = `<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div><p class="mt-4 text-gray-600">AI đang sáng tác truyện...</p>`;
+           $('#story-content').innerHTML = `<p class="mb-4 text-center text-slate-600">Kéo và thả các từ vào ô trống.</p><div id="word-bank" class="flex flex-wrap justify-center gap-3 p-4 mb-4 bg-slate-100 rounded-lg"></div><div id="cloze-story" class="jp-font mb-6 text-slate-800"></div><div class="text-center"><button id="check-story-btn" class="btn btn-primary">Xem đáp án</button></div><div id="story-answer-section" class="hidden mt-6 p-4 border-t-2 border-slate-200"><h3 class="text-xl font-bold mb-2 text-green-700">Truyện Hoàn Chỉnh</h3><p id="full-story" class="jp-font text-lg mb-4 bg-green-50 p-3 rounded"></p><h3 class="text-xl font-bold mb-2 text-blue-700">Bản Dịch</h3><p id="story-translation" class="text-lg bg-blue-50 p-3 rounded"></p><div class="mt-6 text-center"><button id="new-story-btn" class="btn btn-secondary">Tạo truyện mới</button></div></div>`;
+           $('#add-word-list-modal').innerHTML = `<div class="modal-content"><h3 class="text-2xl font-bold mb-4">Tạo bộ từ mới</h3><input type="text" id="new-list-name-input" placeholder="Ví dụ: N2 - Bài 10" class="input-base mb-4"><div class="flex justify-end gap-3"><button class="btn btn-secondary close-modal">Hủy</button><button id="add-new-list-btn" class="btn btn-primary">Tạo</button></div></div>`;
+           $('#add-edit-word-modal').innerHTML = `<div class="modal-content"><h3 id="word-modal-title" class="text-2xl font-bold mb-4">Thêm từ mới</h3><input type="hidden" id="word-id-input"><input type="hidden" id="word-list-name-input"><div class="space-y-4"><input type="text" id="kanji-input" placeholder="Kanji / Từ vựng" class="input-base"><input type="text" id="reading-input" placeholder="Cách đọc (Hiragana)" class="input-base"><input type="text" id="meaning-input" placeholder="Ý nghĩa" class="input-base"></div><div class="flex justify-end gap-3 mt-6"><button class="btn btn-secondary close-modal">Hủy</button><button id="save-word-btn" class="btn btn-primary">Lưu</button></div></div>`;
+           $('#import-modal').innerHTML = `<div class="modal-content"><h3 class="text-2xl font-bold mb-4">Nhập hàng loạt bằng JSON</h3><p class="text-sm text-gray-500 mb-2">Dán một mảng (array) các object JSON vào đây. Ví dụ:</p><pre class="bg-slate-100 p-2 rounded text-xs overflow-x-auto mb-4"><code>[
+ {
+   "kanji": "新しい",
+   "reading": "あたらしい",
+   "meaning": "Mới"
+ }
+]</code></pre><textarea id="import-data-input" rows="8" class="input-base font-mono text-sm"></textarea><div class="mt-4"><label for="import-list-name-input" class="font-semibold text-sm text-gray-700">Tên cho bộ từ mới</label><input type="text" id="import-list-name-input" placeholder="Ví dụ: N1 - Ngữ pháp" class="input-base mt-1"></div><div id="import-feedback" class="text-sm mt-4 text-center hidden"></div><div class="flex justify-end gap-3 mt-6"><button class="btn btn-secondary close-modal">Hủy</button><button id="import-data-btn" class="btn btn-primary">Nhập</button></div></div>`;
+       };
+       
+       // --- DATABASE SERVICE ---
+       const db = {
+           getWordLists: () => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'),
+           saveWordLists: (lists) => localStorage.setItem(STORAGE_KEY, JSON.stringify(lists)),
+           getApiKey: () => localStorage.getItem(API_KEY_STORAGE) || '',
+           saveApiKey: (key) => localStorage.setItem(API_KEY_STORAGE, key),
+       };
+       if (Object.keys(db.getWordLists()).length === 0) { db.saveWordLists(initialVocabulary); }
+
+       // --- CORE LOGIC ---
+       const checkApiKeyStatus = () => {
+           const apiKey = db.getApiKey();
+           const storyBtnContainer = $('#create-story-btn').parentElement;
+           if (apiKey) {
+               storyBtnContainer.classList.remove('opacity-50', 'cursor-not-allowed');
+               storyBtnContainer.querySelector('button').disabled = false;
+               $('#api-key-tooltip').style.visibility = 'hidden';
+           } else {
+               storyBtnContainer.classList.add('opacity-50', 'cursor-not-allowed');
+               storyBtnContainer.querySelector('button').disabled = true;
+               $('#api-key-tooltip').style.visibility = 'visible';
+           }
+       };
+
+       function renderWordManager() {
+           const lists = db.getWordLists();
+           const container = $('#word-lists-container');
+           container.innerHTML = Object.keys(lists).length === 0 ? '<div class="text-center p-8 bg-slate-100 rounded-lg"><p class="text-slate-500">Chưa có bộ từ nào. Hãy tạo một bộ mới!</p></div>' : '';
+           for (const listName in lists) {
+               const listContainer = document.createElement('div');
+               listContainer.className = 'bg-slate-100 p-4 rounded-lg';
+               let wordsHTML = lists[listName].map(word => `<div class="word-item bg-white grid grid-cols-2 md:grid-cols-4 items-center gap-4 p-4 rounded-lg border border-slate-200"><strong class="jp-font text-lg">${word.kanji}</strong><span class="text-slate-600">${word.reading}</span><span class="col-span-2 md:col-span-1 text-slate-800">${word.meaning}</span><div class="flex gap-2 justify-self-end col-start-2 md:col-start-auto"><button class="edit-word-btn btn btn-sm btn-secondary" data-list="${listName}" data-id="${word.id}">Sửa</button><button class="delete-word-btn btn btn-sm btn-danger" data-list="${listName}" data-id="${word.id}">Xóa</button></div></div>`).join('');
+               listContainer.innerHTML = `<div class="flex justify-between items-center mb-4 flex-wrap gap-2"><h3 class="text-xl font-bold">${listName}</h3><div class="flex gap-2"><button class="add-word-to-list-btn btn btn-sm btn-primary" data-list="${listName}">Thêm từ</button><button class="delete-list-btn btn btn-sm btn-danger" data-list="${listName}">Xóa bộ</button></div></div><div class="space-y-2">${wordsHTML || '<p class="text-sm text-center p-4">Bộ từ này trống.</p>'}</div>`;
+               container.appendChild(listContainer);
+           }
+           showScreen('manager-screen');
+       }
+
+       function renderLearnScreen() {
+           const lists = db.getWordLists();
+           const container = $('#word-list-radios');
+           container.innerHTML = '';
+           let isFirst = true;
+           const validLists = Object.keys(lists).filter(listName => lists[listName].length > 0);
+           if(validLists.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 p-4 text-center">Không có bộ từ nào để học. Vui lòng vào trình quản lý để thêm từ.</p>';
+                $('#go-to-match-game-settings-btn').style.display = 'none';
+                $('#create-story-btn').parentElement.style.display = 'none';
+           } else {
+               validLists.forEach(listName => {
+                   const div = document.createElement('div');
+                   div.innerHTML = `<input type="radio" id="list-${listName.replace(/\s/g, '-')}" name="word-list" value="${listName}" ${isFirst ? 'checked' : ''} hidden><label for="list-${listName.replace(/\s/g, '-')}" class="p-3 block cursor-pointer rounded-lg hover:bg-slate-200">${listName} (${lists[listName].length} từ)</label>`;
+                   container.appendChild(div); isFirst = false;
+               });
+               $('#go-to-match-game-settings-btn').style.display = 'inline-flex';
+               $('#create-story-btn').parentElement.style.display = 'inline-block';
+               container.querySelectorAll('input[name="word-list"]').forEach(radio => radio.addEventListener('change', updatePreview));
+               updatePreview();
+           }
+           showScreen('list-selection-screen');
+       }
+
+       function updatePreview() {
+           const selectedValue = $('input[name="word-list"]:checked')?.value;
+           const previewList = $('#preview-list');
+           if (!selectedValue) { previewList.innerHTML = '<p class="text-sm text-slate-400">Chọn một bộ từ để xem trước.</p>'; return; };
+           activeVocabularyList = db.getWordLists()[selectedValue];
+           previewList.innerHTML = activeVocabularyList.map(word => `<div class="p-2 border-b border-slate-200"><div class="flex justify-between items-center"><p class="jp-font font-bold text-slate-800">${word.kanji}</p><p class="text-sm text-slate-500">${word.reading}</p></div><p class="text-xs text-slate-600">${word.meaning}</p></div>`).join('');
+           updateRadioStyles();
+       }
+
+       function updateRadioStyles(containerSelector = '#word-list-radios') {
+           $$(containerSelector + ' input[type="radio"]').forEach(radio => {
+               const label = radio.nextElementSibling;
+               if (radio.checked) {
+                   label.classList.add('bg-indigo-100', 'text-indigo-800', 'font-bold');
+                   label.classList.remove('hover:bg-slate-200');
+               } else {
+                   label.classList.remove('bg-indigo-100', 'text-indigo-800', 'font-bold');
+                   label.classList.add('hover:bg-slate-200');
+               }
+           });
+       }
+       
+       function setupMatchGameSettings() {
+            const pairCountSelect = $('#pair-count');
+            pairCountSelect.innerHTML = '';
+            const maxPairs = activeVocabularyList.length;
+            [4, 8, 12, 16, 20].forEach(opt => { if (opt <= maxPairs) pairCountSelect.innerHTML += `<option value="${opt}">${opt} cặp (${opt*2} thẻ)</option>`; });
+            if (maxPairs > 0) {
+               pairCountSelect.innerHTML += `<option value="${maxPairs}">Tất cả ${maxPairs} cặp (${maxPairs*2} thẻ)</option>`;
+               pairCountSelect.value = Math.min(maxPairs, 8); // Default to 8 or max
+            }
+            showScreen('settings-screen');
+            updateRadioStyles('#cardA-options');
+            updateRadioStyles('#cardB-options');
+       }
+
+       function startGame() {
+           const cardAValue = $('input[name="cardA"]:checked').value;
+           const cardBValue = $('input[name="cardB"]:checked').value;
+           totalPairs = parseInt($('#pair-count').value);
+           const gameBoard = $('#game-board');
+           gameBoard.innerHTML = '';
+           selectedCard = null; isChecking = false; matchedPairs = 0; seconds = 0;
+           clearInterval(timerInterval);
+           $('#matched-pairs').textContent = 0;
+           $('#total-pairs').textContent = totalPairs;
+           const timerEl = $('#timer');
+           timerEl.textContent = 0;
+           const selectedWords = shuffle([...activeVocabularyList]).slice(0, totalPairs);
+           let gameCards = [];
+           selectedWords.forEach(word => {
+               gameCards.push({ item: word, type: cardAValue });
+               gameCards.push({ item: word, type: cardBValue });
+           });
+           shuffle(gameCards).forEach(cardData => gameBoard.appendChild(createCardElement(cardData.item, cardData.type)));
+           showScreen('game-screen');
+           timerInterval = setInterval(() => { seconds++; timerEl.textContent = seconds; }, 1000);
+       }
+
+       function createCardElement(item, cardType) {
+           const card = document.createElement('div');
+           card.className = 'game-card';
+           card.dataset.id = item.id;
+           card.dataset.reading = item.reading;
+           const audioIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="text-indigo-600" viewBox="0 0 16 16"><path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/><path d="M10.121 12.59A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.59l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.88z"/><path d="M8.707 11.182A4.49 4.49 0 0 0 10.025 8a4.49 4.49 0 0 0-1.318-3.182L8 5.525A3.49 3.49 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06"/></svg>`;
+           const contentMap = {
+               'kanji': `<span class="jp-font text-xl sm:text-2xl font-bold">${item.kanji}</span>`,
+               'reading': `<span class="jp-font text-base sm:text-xl">${item.reading}</span>`,
+               'meaning': `<span class="text-xs sm:text-sm font-medium">${item.meaning}</span>`,
+               'audio': audioIcon,
+           };
+           card.innerHTML = contentMap[cardType] || '';
+           return card;
+       }
+
+       function handleCardClick(e) {
+           const clickedCard = e.target.closest('.game-card');
+           if (!clickedCard || isChecking || clickedCard.classList.contains('is-matched') || clickedCard === selectedCard) return;
+           if (clickedCard.dataset.reading) speak(clickedCard.dataset.reading);
+           if (!selectedCard) {
+               selectedCard = clickedCard;
+               selectedCard.classList.add('is-selected');
+           } else {
+               isChecking = true;
+               clickedCard.classList.add('is-selected');
+               if (selectedCard.dataset.id === clickedCard.dataset.id) {
+                   setTimeout(() => {
+                       selectedCard.classList.add('is-matched');
+                       clickedCard.classList.add('is-matched');
+                       selectedCard.classList.remove('is-selected');
+                       clickedCard.classList.remove('is-selected');
+                       selectedCard = null; isChecking = false;
+                       matchedPairs++;
+                       $('#matched-pairs').textContent = matchedPairs;
+                       if (matchedPairs === totalPairs) {
+                           clearInterval(timerInterval);
+                           $('#final-time').textContent = seconds;
+                           $('#final-pairs').textContent = totalPairs;
+                           showScreen('results-screen');
+                       }
+                   }, 400);
+               } else {
+                   setTimeout(() => {
+                       selectedCard.classList.add('is-wrong');
+                       clickedCard.classList.add('is-wrong');
+                       setTimeout(() => {
+                          selectedCard.classList.remove('is-selected', 'is-wrong');
+                          clickedCard.classList.remove('is-selected', 'is-wrong');
+                          selectedCard = null; isChecking = false;
+                       }, 800);
+                   }, 400);
+               }
+           }
+       }
+       
+       async function handleCreateStoryClick() {
+           showScreen('story-mode-screen');
+           $('#story-content').classList.add('hidden');
+           $('#story-loader').classList.remove('hidden');
+           // Reset loader in case of previous error
+           $('#story-loader').innerHTML = `<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div><p class="mt-4 text-gray-600">AI đang sáng tác truyện...</p>`;
+           $('#story-answer-section').classList.add('hidden');
+           await generateStory();
+       }
+
+       async function generateStory() {
+           const apiKey = db.getApiKey();
+           const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+           const wordsForStory = shuffle([...activeVocabularyList]).slice(0, Math.min(4, activeVocabularyList.length));
+           const wordListString = wordsForStory.map(w => `${w.kanji} (${w.reading})`).join(', ');
+           const systemPrompt = `You are a Japanese language tutor creating a learning exercise. 1. Write a very short, simple story (3-4 sentences) in natural-sounding Japanese. 2. The story MUST include ALL of the following words: ${wordListString}. 3. After the story, create a "fill-in-the-blank" version. In this version, replace ONLY the target words with the placeholder [____]. 4. Finally, provide a Vietnamese translation of the complete story. 5. Format your entire response EXACTLY like this, with these specific headings: [STORY_CLOZE] (Your cloze story here) [STORY_FULL] (Your full, complete Japanese story here) [STORY_TRANSLATION] (Your Vietnamese translation here)`;
+           try {
+               const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] }) });
+               if (!response.ok) throw new Error(`API Error: ${response.status} ${await response.text()}`);
+               const result = await response.json();
+               const text = result.candidates[0].content.parts[0].text;
+               const clozeText = text.split('[STORY_CLOZE]')[1]?.split('[STORY_FULL]')[0]?.trim();
+               const fullText = text.split('[STORY_FULL]')[1]?.split('[STORY_TRANSLATION]')[0]?.trim();
+               const translationText = text.split('[STORY_TRANSLATION]')[1]?.trim();
+               $('#full-story').textContent = fullText;
+               $('#story-translation').textContent = translationText;
+               $('#cloze-story').innerHTML = clozeText.replace(/\[____\]/g, '<span class="cloze-blank" data-filled="false"></span>');
+               const wordBank = $('#word-bank');
+               wordBank.innerHTML = '';
+               shuffle(wordsForStory).forEach(word => {
+                   const wordEl = document.createElement('div');
+                   wordEl.className = 'word-bank-item jp-font p-2 bg-white border rounded-lg shadow-sm';
+                   wordEl.textContent = word.kanji;
+                   wordEl.draggable = true;
+                   wordEl.dataset.word = word.kanji;
+                   wordBank.appendChild(wordEl);
+               });
+               $('#story-loader').classList.add('hidden');
+               $('#story-content').classList.remove('hidden');
+               addDragDropListeners();
+           } catch (error) {
+               let displayMessage = `Đã có lỗi xảy ra khi gọi AI. Vui lòng thử lại.`;
+               const errorMessage = error.message.toLowerCase();
+
+               if (errorMessage.includes('api key not valid') || errorMessage.includes('400') || errorMessage.includes('403')) {
+                   displayMessage = 'Có lỗi với khóa API của bạn. Vui lòng kiểm tra lại trong phần Cài đặt và đảm bảo khóa còn hiệu lực.';
+               } else if (errorMessage.includes('failed to fetch')) {
+                   displayMessage = 'Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra lại kết nối mạng của bạn.';
+               }
+               
+               $('#story-loader').innerHTML = `<div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center"><strong>Lỗi!</strong><p>${displayMessage}</p><p class="text-xs mt-2 text-red-500">Chi tiết: ${error.message}</p></div>`;
+           }
+       }
+       
+       function addDragDropListeners() {
+           $$('.word-bank-item').forEach(item => {
+               item.addEventListener('dragstart', e => { draggedItem = e.target; setTimeout(() => e.target.classList.add('opacity-0'), 0); });
+               item.addEventListener('dragend', () => setTimeout(() => { if(draggedItem) draggedItem.classList.remove('opacity-0'); }, 0));
+           });
+           $$('.cloze-blank').forEach(blank => {
+               blank.addEventListener('dragover', e => { e.preventDefault(); if(blank.dataset.filled === 'false') blank.classList.add('drag-over'); });
+               blank.addEventListener('dragleave', () => blank.classList.remove('drag-over'));
+               blank.addEventListener('drop', e => {
+                   e.preventDefault(); blank.classList.remove('drag-over');
+                   if (blank.dataset.filled === 'false') {
+                       blank.textContent = draggedItem.textContent;
+                       blank.classList.add('jp-font', 'p-2', 'flex', 'items-center', 'justify-center', 'bg-green-100', 'border-green-400');
+                       blank.dataset.filled = 'true';
+                       draggedItem.parentElement.removeChild(draggedItem);
+                       draggedItem = null;
+                   }
+               });
+           });
+       }
+       
+       const synth = window.speechSynthesis;
+       const speak = (text) => {
+           if (synth.speaking) synth.cancel();
+           const utterThis = new SpeechSynthesisUtterance(text);
+           utterThis.lang = 'ja-JP';
+           synth.speak(utterThis);
+       }
+
+       const handleSaveWord = () => {
+           const id = $('#word-id-input').value;
+           const listName = $('#word-list-name-input').value;
+           const word = { id: id ? parseInt(id) : Date.now(), kanji: $('#kanji-input').value.trim(), reading: $('#reading-input').value.trim(), meaning: $('#meaning-input').value.trim(), };
+           let feedbackEl = document.getElementById('word-modal-feedback');
+           if (!feedbackEl) {
+               feedbackEl = document.createElement('div');
+               feedbackEl.id = 'word-modal-feedback';
+               feedbackEl.className = 'text-red-600 text-sm mt-2 text-center';
+               $('#add-edit-word-modal .modal-content').appendChild(feedbackEl);
+           }
+           feedbackEl.textContent = '';
+           feedbackEl.classList.remove('text-green-600', 'text-red-600');
+           if (!word.kanji || !word.meaning) {
+               feedbackEl.textContent = "Vui lòng nhập Từ vựng và Ý nghĩa.";
+               feedbackEl.classList.add('text-red-600');
+               return;
+           }
+           const lists = db.getWordLists();
+           if (id) { const wordIndex = lists[listName].findIndex(w => w.id == id); if (wordIndex > -1) lists[listName][wordIndex] = word; }
+           else { lists[listName].push(word); }
+           db.saveWordLists(lists);
+           feedbackEl.textContent = 'Đã lưu từ thành công!';
+           feedbackEl.classList.add('text-green-600');
+           setTimeout(() => { hideAllModals(); renderWordManager(); feedbackEl.textContent = ''; }, 1200);
+       };
+
+       const handleImport = () => {
+           const data = $('#import-data-input').value.trim();
+           const listName = $('#import-list-name-input').value.trim();
+           const feedbackEl = $('#import-feedback');
+
+           feedbackEl.textContent = '';
+           feedbackEl.classList.add('hidden');
+           feedbackEl.classList.remove('text-red-600', 'text-green-600');
+
+           if (!data || !listName) {
+               feedbackEl.textContent = 'Vui lòng dán dữ liệu JSON và nhập tên cho bộ từ.';
+               feedbackEl.classList.add('text-red-600');
+               feedbackEl.classList.remove('hidden');
+               return;
+           }
+           
+           let newWords = [];
+           try {
+               const parsed = JSON.parse(data);
+               if (!Array.isArray(parsed)) {
+                   throw new Error("Dữ liệu JSON phải là một mảng (array).");
+               }
+               newWords = parsed.map(item => ({
+                   id: item.id || Date.now() + Math.random(),
+                   kanji: item.kanji || '',
+                   reading: item.reading || '',
+                   meaning: item.meaning || ''
+               })).filter(word => word.kanji && word.meaning);
+           } catch (e) {
+               feedbackEl.textContent = `Lỗi phân tích JSON: ${e.message}`;
+               feedbackEl.classList.add('text-red-600');
+               feedbackEl.classList.remove('hidden');
+               return;
+           }
+
+           if (newWords.length === 0) {
+               feedbackEl.textContent = 'Không tìm thấy từ vựng hợp lệ nào trong dữ liệu JSON.';
+               feedbackEl.classList.add('text-red-600');
+               feedbackEl.classList.remove('hidden');
+               return;
+           }
+
+           const lists = db.getWordLists();
+           if (lists[listName]) {
+                if(!confirm(`Bộ từ "${listName}" đã tồn tại. Bạn có muốn thêm các từ này vào bộ từ đã có không?`)) return;
+                lists[listName].push(...newWords);
+           } else {
+               lists[listName] = newWords;
+           }
+           db.saveWordLists(lists);
+           
+           feedbackEl.textContent = `Đã nhập thành công ${newWords.length} từ vào bộ "${listName}"!`;
+           feedbackEl.classList.add('text-green-600');
+           feedbackEl.classList.remove('hidden');
+
+           setTimeout(() => {
+               hideAllModals();
+               renderWordManager();
+           }, 2000);
+       };
+       
+       // --- EVENT LISTENERS ---
+       $('#go-to-learn-btn').addEventListener('click', renderLearnScreen);
+       $('#go-to-manager-btn').addEventListener('click', renderWordManager);
+       document.body.addEventListener('click', e => {
+           if (e.target.matches('.back-to-dashboard')) showScreen('dashboard-screen');
+           if (e.target.matches('.back-to-list-selection')) renderLearnScreen();
+           if (e.target.matches('.close-modal')) hideAllModals();
+           if (e.target.matches('#go-to-match-game-settings-btn')) setupMatchGameSettings();
+           if (e.target.matches('#show-add-list-modal-btn')) showModal('add-word-list-modal');
+           if (e.target.matches('#show-import-modal-btn')) {
+               const feedbackEl = $('#import-feedback');
+               if (feedbackEl) {
+                   feedbackEl.textContent = '';
+                   feedbackEl.classList.add('hidden');
+               }
+               $('#import-list-name-input').value = '';
+               $('#import-data-input').value = '';
+               showModal('import-modal');
+           }
+           if (e.target.matches('#add-new-list-btn')) {
+               const name = $('#new-list-name-input').value.trim();
+               if (!name) return;
+               const lists = db.getWordLists();
+               if (lists[name]) { alert('Tên bộ từ đã tồn tại.'); return; }
+               let feedbackEl = document.getElementById('add-list-feedback');
+               if (!feedbackEl) {
+                   feedbackEl = document.createElement('div');
+                   feedbackEl.id = 'add-list-feedback';
+                   feedbackEl.className = 'text-red-600 text-sm mt-2 text-center';
+                   $('#add-word-list-modal .modal-content').appendChild(feedbackEl);
+               }
+               feedbackEl.textContent = '';
+               feedbackEl.classList.remove('text-green-600', 'text-red-600');
+               if (lists[name]) {
+                   feedbackEl.textContent = 'Tên bộ từ đã tồn tại.';
+                   feedbackEl.classList.add('text-red-600');
+                   return;
+               }
+               lists[name] = [];
+               db.saveWordLists(lists);
+               feedbackEl.textContent = 'Đã tạo bộ từ mới thành công!';
+               feedbackEl.classList.add('text-green-600');
+               setTimeout(() => { hideAllModals(); renderWordManager(); feedbackEl.textContent = ''; }, 1200);
+           }
+           if (e.target.matches('#save-word-btn')) handleSaveWord();
+           if (e.target.matches('#import-data-btn')) handleImport();
+           if (e.target.matches('#start-game-btn')) startGame();
+           if (e.target.matches('#play-again-btn')) startGame();
+           if (e.target.closest('.game-card')) handleCardClick(e);
+           if (e.target.matches('#create-story-btn')) handleCreateStoryClick();
+           if (e.target.matches('#check-story-btn')) $('#story-answer-section').classList.remove('hidden');
+           if (e.target.matches('#new-story-btn')) handleCreateStoryClick();
+           if (e.target.matches('#show-settings-modal-btn')) {
+               $('#api-key-input').value = db.getApiKey();
+               $('#save-key-feedback').classList.add('hidden');
+               showModal('settings-modal');
+           }
+           if (e.target.matches('#save-api-key-btn')) {
+               db.saveApiKey($('#api-key-input').value.trim());
+               checkApiKeyStatus();
+               const feedbackEl = $('#save-key-feedback');
+               feedbackEl.textContent = 'Đã lưu khóa API thành công!';
+               feedbackEl.classList.remove('hidden');
+               setTimeout(() => {
+                   feedbackEl.classList.add('hidden');
+                   hideAllModals();
+               }, 2000);
+           }
+       });
+
+       $('#manager-screen').addEventListener('click', e => {
+           const { list, id } = e.target.dataset;
+           if (e.target.matches('.add-word-to-list-btn')) { $('#word-modal-title').textContent = `Thêm từ vào bộ "${list}"`; $('#word-id-input').value = ''; $('#word-list-name-input').value = list; $('#kanji-input').value = ''; $('#reading-input').value = ''; $('#meaning-input').value = ''; showModal('add-edit-word-modal');
+           } else if (e.target.matches('.edit-word-btn')) { const word = db.getWordLists()[list].find(w => w.id == id); $('#word-modal-title').textContent = 'Sửa từ'; $('#word-id-input').value = word.id; $('#word-list-name-input').value = list; $('#kanji-input').value = word.kanji; $('#reading-input').value = word.reading; $('#meaning-input').value = word.meaning; showModal('add-edit-word-modal');
+           } else if (e.target.matches('.delete-word-btn')) {
+               $('#confirm-delete-title').textContent = 'Xác nhận xóa từ';
+               $('#confirm-delete-message').textContent = 'Bạn có chắc chắn muốn xóa từ này không?';
+               showModal('confirm-delete-modal');
+               let confirmDeleteBtn = $('#confirm-delete-btn');
+               confirmDeleteBtn.onclick = function() {
+                   let lists = db.getWordLists();
+                   lists[list] = lists[list].filter(w => w.id != id);
+                   db.saveWordLists(lists);
+                   hideAllModals();
+                   renderWordManager();
+               };
+               $('#confirm-delete-title').textContent = 'Xác nhận xóa từ';
+               $('#confirm-delete-message').textContent = 'Bạn có chắc chắn muốn xóa từ này không?';
+               showModal('confirm-delete-modal');
+               const confirmBtn = $('#confirm-delete-btn');
+               confirmBtn.onclick = function() {
+                   let lists = db.getWordLists();
+                   lists[list] = lists[list].filter(w => w.id != id);
+                   db.saveWordLists(lists);
+                   hideAllModals();
+                   renderWordManager();
+               };
+           } else if (e.target.matches('.delete-list-btn')) {
+               $('#confirm-delete-title').textContent = 'Xác nhận xóa bộ từ';
+               $('#confirm-delete-message').textContent = `Bạn có chắc chắn muốn xóa TOÀN BỘ bộ từ "${list}" không?`;
+               showModal('confirm-delete-modal');
+               let confirmDeleteBtn = $('#confirm-delete-btn');
+               confirmDeleteBtn.onclick = function() {
+                   let lists = db.getWordLists();
+                   delete lists[list];
+                   db.saveWordLists(lists);
+                   hideAllModals();
+                   renderWordManager();
+               };
+           }
+       });
+       
+       document.body.addEventListener('change', e => {
+           if (e.target.name === 'cardA' || e.target.name === 'cardB') {
+               updateRadioStyles('#settings-screen');
+           }
+       });
+
+       // --- INITIAL LOAD ---
+       injectHTML();
+       checkApiKeyStatus();
+       showScreen('dashboard-screen');
+   });
+   </script>
+</body>
+</html>
