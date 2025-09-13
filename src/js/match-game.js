@@ -152,3 +152,95 @@ function launchMatchGame(wordList, container) {
 }
 // Gán hàm vào window để game.js có thể gọi
 window.launchMatchGame = launchMatchGame;
+ 
+// V2 with flip-on-click UI
+function launchMatchGameV2(wordList, container) {
+    if (!container) return;
+    const options = { cardA: 'kanji', cardB: 'meaning', pairCount: Math.min(8, Math.floor(wordList.length / 2) * 2) };
+
+    const pairs = [];
+    const used = new Set();
+    while (pairs.length < options.pairCount && pairs.length < wordList.length) {
+        const idx = Math.floor(Math.random() * wordList.length);
+        if (used.has(idx)) continue;
+        used.add(idx);
+        const w = wordList[idx];
+        pairs.push({ a: w[options.cardA], b: w[options.cardB], id: w.id });
+    }
+
+    const cards = [];
+    pairs.forEach(p => {
+        cards.push({ type: 'A', value: p.a, id: p.id });
+        cards.push({ type: 'B', value: p.b, id: p.id });
+    });
+
+    if (typeof shuffle === 'function') shuffle(cards);
+
+    container.innerHTML = '';
+    const board = document.createElement('div');
+    board.className = 'grid grid-cols-4 gap-4 p-4';
+
+    cards.forEach((card) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'flip-container aspect-square relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded';
+        btn.dataset.cardId = card.id;
+        btn.setAttribute('aria-label', 'Card');
+
+        const flipper = document.createElement('div');
+        flipper.className = 'flipper w-full h-full bg-white border rounded shadow overflow-hidden';
+
+        const front = document.createElement('div');
+        front.className = 'flip-face bg-blue-50 text-blue-600 text-3xl font-bold';
+        front.textContent = '?';
+
+        const back = document.createElement('div');
+        back.className = 'flip-face flip-back text-center p-2';
+        back.innerHTML = `<div class="jp-font text-lg md:text-xl">${card.value}</div>`;
+
+        flipper.appendChild(front);
+        flipper.appendChild(back);
+        btn.appendChild(flipper);
+        board.appendChild(btn);
+    });
+    container.appendChild(board);
+
+    let firstCard = null;
+    let isChecking = false;
+
+    board.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const el = e.currentTarget;
+            if (isChecking || el.classList.contains('matched')) return;
+            if (firstCard && el === firstCard) return;
+
+            el.classList.add('is-flipped');
+
+            if (!firstCard) {
+                firstCard = el;
+            } else {
+                isChecking = true;
+                const secondCard = el;
+
+                if (firstCard.dataset.cardId === secondCard.dataset.cardId && firstCard !== secondCard) {
+                    setTimeout(() => {
+                        firstCard.classList.add('matched');
+                        secondCard.classList.add('matched');
+                        firstCard = null;
+                        isChecking = false;
+                    }, 350);
+                } else {
+                    setTimeout(() => {
+                        firstCard.classList.remove('is-flipped');
+                        secondCard.classList.remove('is-flipped');
+                        firstCard = null;
+                        isChecking = false;
+                    }, 800);
+                }
+            }
+        });
+    });
+}
+
+// Override to use V2 flipping behavior
+window.launchMatchGame = launchMatchGameV2;

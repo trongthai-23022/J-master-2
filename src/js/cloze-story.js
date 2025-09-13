@@ -1,9 +1,9 @@
 // Cloze Story AI: Tạo truyện chêm bằng Gemini API
 async function createClozeStory(apiKey, vocabList) {
-    // Sử dụng hàm generateClozeStory từ gemini.js
     const story = await generateClozeStory(apiKey, vocabList);
-    renderClozeStory(story, vocabList);
+    if (story) renderClozeStory(story, vocabList);
     return story;
+}
 
 // Render UI cho cloze story
 function renderClozeStory(story, vocabList) {
@@ -43,7 +43,7 @@ function renderClozeStory(story, vocabList) {
 // Khởi động từ UI
 function launchClozeStoryAI() {
     // Lấy API key và danh sách từ vựng
-    const apiKey = window.geminiApiKey || '';
+    const apiKey = (typeof window.getApiKey === 'function' ? window.getApiKey() : (window.geminiApiKey || ''));
     const lists = window.getWordLists ? window.getWordLists() : {};
     const firstList = Object.values(lists)[0] || [];
     createClozeStory(apiKey, firstList);
@@ -54,5 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('btn-gen-cloze');
     if (btn) btn.onclick = launchClozeStoryAI;
 });
-}
-// ...Thêm các hàm render UI, kéo thả từ vào ô trống
+
+// Expose for potential external use
+window.createClozeStory = createClozeStory;
+window.renderClozeStory = renderClozeStory;
+

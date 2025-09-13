@@ -1,21 +1,30 @@
 // Local Storage Warning Logic
 function checkStorageWarning() {
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024; // 5MB (approximate, string-length based)
     let used = 0;
-    for (let key in localStorage) {
-        if (!localStorage.hasOwnProperty(key)) continue;
-        used += (localStorage.getItem(key) || '').length;
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        used += ((localStorage.getItem(key) || '').length);
     }
     if (used > maxSize * 0.9) {
         showStorageWarning();
     }
+}
+
 function showStorageWarning() {
     const area = document.getElementById('stats-area');
-    if (area) {
-        area.innerHTML += '<div class="text-red-600 font-bold mt-2">Cảnh báo: Bộ nhớ gần đầy!</div>';
+    if (area && !area.querySelector('[data-storage-warning]')) {
+        const div = document.createElement('div');
+        div.dataset.storageWarning = 'true';
+        div.className = 'text-red-600 font-bold mt-2';
+        div.textContent = 'Cảnh báo: Bộ nhớ gần đầy!';
+        area.appendChild(div);
     }
 }
-// Tự động kiểm tra khi thay đổi dữ liệu
-window.onWordListsChange = checkStorageWarning;
+
+// Re-check on data change and on load
 document.addEventListener('DOMContentLoaded', checkStorageWarning);
+if (typeof window.onWordListsChange === 'function') {
+    window.onWordListsChange(() => checkStorageWarning());
 }
+

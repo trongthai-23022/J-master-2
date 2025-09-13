@@ -9,7 +9,6 @@ import './sync.js';
 import './storage-warning.js';
 import './lang.js';
 import './theme.js';
-import './minigames.js';
 import './encrypt.js';
 
 // --- CÁC HÀM TIỆN ÍCH CHO MODAL ---
@@ -252,6 +251,7 @@ function initApp() {
     document.getElementById('btn-flashcard')?.addEventListener('click', () => launchGame('flashcard'));
     document.getElementById('btn-quiz')?.addEventListener('click', () => launchGame('quiz'));
     document.getElementById('btn-writing')?.addEventListener('click', () => launchGame('writing'));
+    document.getElementById('btn-match')?.addEventListener('click', () => launchGame('match-game'));
 }
 
 // Xử lý lỗi toàn cục
@@ -263,3 +263,52 @@ window.onerror = function(msg, url, line, col, error) {
 
 // Khởi chạy ứng dụng khi trang đã tải xong
 window.onload = initApp;
+try { renderVocabLists = renderVocabListsOverride; } catch (e) { try { window.renderVocabLists = renderVocabListsOverride; } catch(_){} }
+
+// Override: render vocab list with 3 parallel columns (Kanji / Đọc / Nghĩa)
+function renderVocabListsOverride() {
+    const lists = window.getWordLists ? window.getWordLists() : {};
+    const container = document.getElementById('vocab-lists-area');
+    if (!container) return;
+    container.innerHTML = '';
+    if (Object.keys(lists).length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Chưa có bộ từ nào. Hãy tạo một bộ mới!</p>';
+        return;
+    }
+    for (const listName in lists) {
+        const listContainer = document.createElement('div');
+        listContainer.className = 'bg-gray-50 p-4 rounded-lg mb-4 shadow-sm';
+        const words = lists[listName] || [];
+
+        const headerRow = `
+            <div class="grid grid-cols-4 gap-4 text-xs font-semibold text-gray-500 border-b pb-2">
+                <div>Kanji</div>
+                <div>Đọc</div>
+                <div>Nghĩa</div>
+                <div class="text-right">Thao tác</div>
+            </div>`;
+
+        const wordsHTML = words.map(word => `
+            <div class="word-item grid grid-cols-4 items-center gap-4 border-b py-2">
+                <div class="jp-font font-semibold">${word.kanji || ''}</div>
+                <div class="text-sm text-gray-700">${word.reading || ''}</div>
+                <div class="text-sm text-gray-700">${word.meaning || ''}</div>
+                <div class="flex gap-2 justify-self-end">
+                    <button class="edit-word-btn text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Sửa</button>
+                    <button class="delete-word-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Xóa</button>
+                </div>
+            </div>`).join('');
+
+        listContainer.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-bold text-gray-800">${listName} (${words.length} từ)</h3>
+                <div class="flex gap-2">
+                    <button class="add-word-btn text-xs bg-green-100 hover:bg-green-200 text-green-700 py-1 px-2 rounded" data-list-name="${listName}">Thêm từ</button>
+                    <button class="delete-list-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}">Xóa bộ</button>
+                </div>
+            </div>
+            ${headerRow}
+            <div class="space-y-1">${wordsHTML || '<p class="text-xs text-center p-2 text-gray-400">Bộ từ này trống.</p>'}</div>`;
+        container.appendChild(listContainer);
+    }
+}

@@ -1,26 +1,25 @@
-// Multi-language UI Logic
-function setLanguage(lang) {
-    localStorage.setItem('jMasterLang', lang);
-    setLangUI(lang);
-// Hàm cập nhật giao diện
+// Multi-language UI Logic (uses settings.js if present)
 function setLangUI(lang) {
-    // Demo: chỉ đổi tiêu đề
     const title = document.querySelector('h1');
     if (!title) return;
     if (lang === 'en') title.textContent = 'J-Master: Japanese Vocabulary Learning';
-    else if (lang === 'ja') title.textContent = 'J-Master: 日本語語彙学習';
+    else if (lang === 'jp' || lang === 'ja') title.textContent = 'J-Master: 日本語の語彙学習';
     else title.textContent = 'J-Master: Học Từ Vựng Tiếng Nhật';
 }
+
+window.setLangUI = setLangUI;
+
 document.addEventListener('DOMContentLoaded', () => {
-    setLangUI(getLanguage());
+    const getLang = (window.getLang ? window.getLang : () => localStorage.getItem('jMasterLang') || 'vi');
+    const saveLang = (window.saveLang ? window.saveLang : (l => localStorage.setItem('jMasterLang', l)));
+
+    let current = getLang();
+    setLangUI(current);
     const btn = document.getElementById('btn-lang');
     if (btn) btn.onclick = () => {
-        const next = getLanguage() === 'vi' ? 'en' : (getLanguage() === 'en' ? 'ja' : 'vi');
-        setLanguage(next);
+        current = current === 'vi' ? 'en' : (current === 'en' ? 'jp' : 'vi');
+        saveLang(current);
+        setLangUI(current);
     };
 });
-}
-function getLanguage() {
-    return localStorage.getItem('jMasterLang') || 'vi';
-}
-// ...Thêm các hàm chuyển đổi, render UI
+

@@ -1,17 +1,20 @@
-// Dark/Light Mode & Theme Settings
-function setTheme(theme) {
-    localStorage.setItem('jMasterTheme', theme);
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+// Theme init + toggle using settings.js if available
 document.addEventListener('DOMContentLoaded', () => {
-    setTheme(getTheme());
+    try {
+        const current = (window.getTheme ? window.getTheme() : (localStorage.getItem('jMasterTheme') || 'light'));
+        document.documentElement.classList.toggle('dark', current === 'dark');
+    } catch {}
+
     const btn = document.getElementById('btn-theme');
     if (btn) btn.onclick = () => {
-        const next = getTheme() === 'light' ? 'dark' : 'light';
-        setTheme(next);
+        const current = (window.getTheme ? window.getTheme() : (localStorage.getItem('jMasterTheme') || 'light'));
+        const next = current === 'light' ? 'dark' : 'light';
+        if (window.saveTheme) {
+            window.saveTheme(next);
+        } else {
+            localStorage.setItem('jMasterTheme', next);
+            document.documentElement.classList.toggle('dark', next === 'dark');
+        }
     };
 });
-}
-function getTheme() {
-    return localStorage.getItem('jMasterTheme') || 'light';
-}
-// ...Thêm các hàm chuyển đổi, render UI
+
