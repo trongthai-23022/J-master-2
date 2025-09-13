@@ -232,6 +232,26 @@ function initApp() {
     
     // Sự kiện cho nút Lưu trong Modal Cài đặt
     document.getElementById('btn-settings-save').addEventListener('click', handleSaveSettings);
+
+    // --- GẮN SỰ KIỆN CHO CÁC NÚT MINI-GAME ---
+    function launchGame(gameType) {
+        const lists = window.getWordLists ? window.getWordLists() : {};
+        const firstListName = Object.keys(lists)[0];
+
+        if (!firstListName || lists[firstListName].length === 0) {
+            alert('Vui lòng tạo hoặc nhập một bộ từ vựng có từ để bắt đầu chơi!');
+            return;
+        }
+
+        const wordList = lists[firstListName];
+        sessionStorage.setItem('jMasterGameType', gameType);
+        sessionStorage.setItem('jMasterWordList', JSON.stringify(wordList));
+        window.location.href = 'src/game.html';
+    }
+
+    document.getElementById('btn-flashcard')?.addEventListener('click', () => launchGame('flashcard'));
+    document.getElementById('btn-quiz')?.addEventListener('click', () => launchGame('quiz'));
+    document.getElementById('btn-writing')?.addEventListener('click', () => launchGame('writing'));
 }
 
 // Xử lý lỗi toàn cục

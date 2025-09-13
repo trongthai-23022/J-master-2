@@ -1,3 +1,5 @@
+// src/js/match-game.js
+
 // Matching Game: Ghép cặp Kanji, nghĩa, đọc, âm thanh
 function startMatchGame(wordList, options) {
     // options: {cardA: 'kanji', cardB: 'meaning', pairCount: 8}
@@ -71,20 +73,82 @@ function startMatchGame(wordList, options) {
             }
         }
     }
+}
 
 // Hàm khởi động game từ UI
-function launchMatchGame() {
-    // Lấy danh sách từ vựng từ manager.js
-    const lists = window.getWordLists ? window.getWordLists() : {};
-    // Chọn list đầu tiên hoặc rỗng
-    const firstList = Object.values(lists)[0] || [];
-    startMatchGame(firstList, {cardA: 'kanji', cardB: 'meaning', pairCount: 8});
-}
+function launchMatchGame(wordList, container) {
+    // Hàm này dành cho game ghép thẻ, có thể gọi từ game.js
+    // Để tương thích với cấu trúc mới, chúng ta sẽ render vào container được truyền vào
+    if (!container) return;
+    const options = { cardA: 'kanji', cardB: 'meaning', pairCount: Math.min(8, Math.floor(wordList.length / 2) * 2) };
+    
+    // Tái cấu trúc lại một chút để render vào đúng container
+    const pairs = [];
+    const used = new Set();
+    while (pairs.length < options.pairCount && pairs.length < wordList.length) {
+        const idx = Math.floor(Math.random() * wordList.length);
+        if (used.has(idx)) continue;
+        used.add(idx);
+        const w = wordList[idx];
+        pairs.push({ a: w[options.cardA], b: w[options.cardB], id: w.id });
+    }
+    
+    const cards = [];
+    pairs.forEach(p => {
+        cards.push({ type: 'A', value: p.a, id: p.id });
+        cards.push({ type: 'B', value: p.b, id: p.id });
+    });
+    
+    shuffle(cards); // Sử dụng hàm shuffle đã có trong minigames.js
 
-// Gắn vào nút UI
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btn-flashcard');
-    if (btn) btn.onclick = launchMatchGame;
-});
+    container.innerHTML = '';
+    const board = document.createElement('div');
+    board.className = 'grid grid-cols-4 gap-4 p-4';
+    
+    cards.forEach((card) => {
+        const btn = document.createElement('button');
+        btn.className = 'bg-white border rounded shadow px-2 py-4 text-center hover:bg-blue-50 aspect-square'; // Thêm aspect-square
+        btn.textContent = card.value;
+        btn.dataset.cardId = card.id;
+        board.appendChild(btn);
+    });
+    container.appendChild(board);
+
+    let firstCard = null;
+    let isChecking = false;
+
+    board.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if (isChecking || e.currentTarget.classList.contains('matched')) return;
+
+            e.currentTarget.classList.add('bg-yellow-200');
+
+            if (!firstCard) {
+                firstCard = e.currentTarget;
+            } else {
+                isChecking = true;
+                const secondCard = e.currentTarget;
+
+                if (firstCard.dataset.cardId === secondCard.dataset.cardId && firstCard !== secondCard) {
+                    // Matched
+                    setTimeout(() => {
+                        firstCard.classList.add('matched', 'bg-green-200');
+                        secondCard.classList.add('matched', 'bg-green-200');
+                        firstCard = null;
+                        isChecking = false;
+                    }, 500);
+                } else {
+                    // Not matched
+                    setTimeout(() => {
+                        firstCard.classList.remove('bg-yellow-200');
+                        secondCard.classList.remove('bg-yellow-200');
+                        firstCard = null;
+                        isChecking = false;
+                    }, 1000);
+                }
+            }
+        });
+    });
 }
-// ...Thêm các hàm render UI, xử lý sự kiện
+// Gán hàm vào window để game.js có thể gọi
+window.launchMatchGame = launchMatchGame;
