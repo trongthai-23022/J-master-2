@@ -1,4 +1,7 @@
-// App.js: Tích hợp các module chính, khởi tạo app
+// Thay thế toàn bộ nội dung file: src/js/app.js
+
+import './notifications.js';
+import './gemini.js';
 import './logging.js';
 import './error.js';
 import './manager.js';
@@ -11,9 +14,9 @@ import './lang.js';
 import './theme.js';
 import './encrypt.js';
 
-// --- CÁC HÀM TIỆN ÍCH CHO MODAL ---
-const showModal = (modalId) => document.getElementById(modalId)?.classList.remove('hidden');
-const hideModals = () => {
+// --- CÁC HÀM TIỆN ÍCH CHO MODAL (GLOBAL) ---
+window.showModal = (modalId) => document.getElementById(modalId)?.classList.remove('hidden');
+window.hideModals = () => {
     document.querySelectorAll('.fixed.inset-0').forEach(modal => modal.classList.add('hidden'));
 };
 
@@ -39,24 +42,39 @@ function renderVocabLists() {
     for (const listName in lists) {
         const listContainer = document.createElement('div');
         listContainer.className = 'bg-gray-50 p-4 rounded-lg mb-4 shadow-sm';
-        const words = lists[listName];
-        let wordsHTML = words.map(word => `
-            <div class="word-item grid grid-cols-3 items-center gap-4 border-t py-2">
-                <div><strong class="jp-font">${word.kanji}</strong><span class="text-xs text-gray-500">${word.reading}</span></div>
-                <div class="text-sm text-gray-700 col-span-1">${word.meaning}</div>
-                <div class="flex gap-2 justify-self-end">
+        const words = lists[listName] || [];
+
+        const headerRow = `
+            <div class="hidden md:grid grid-cols-4 gap-4 text-xs font-semibold text-gray-500 border-b pb-2 mb-2">
+                <div>Kanji</div>
+                <div>Cách đọc</div>
+                <div>Ý nghĩa</div>
+                <div class="text-right">Thao tác</div>
+            </div>`;
+
+        const wordsHTML = words.map(word => `
+            <div class="word-item grid grid-cols-3 md:grid-cols-4 items-center gap-4 border-b md:border-t-0 py-2">
+                <div class="font-semibold col-span-2 md:col-span-1">
+                    <strong class="jp-font">${word.kanji || ''}</strong>
+                </div>
+                <div class="hidden md:block text-sm text-gray-700">${word.reading || ''}</div>
+                <div class="text-sm text-gray-700 col-span-1">${word.meaning || ''}</div>
+                <div class="flex gap-2 justify-self-end col-span-3 md:col-span-1 mt-2 md:mt-0">
                     <button class="edit-word-btn text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Sửa</button>
                     <button class="delete-word-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Xóa</button>
                 </div>
             </div>`).join('');
+
         listContainer.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
+            <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
                 <h3 class="text-lg font-bold text-gray-800">${listName} (${words.length} từ)</h3>
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
+                    <button class="cloze-story-btn text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 py-1 px-2 rounded" data-list-name="${listName}">Tạo truyện</button>
                     <button class="add-word-btn text-xs bg-green-100 hover:bg-green-200 text-green-700 py-1 px-2 rounded" data-list-name="${listName}">Thêm từ</button>
                     <button class="delete-list-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}">Xóa bộ</button>
                 </div>
             </div>
+            ${headerRow}
             <div class="space-y-1">${wordsHTML || '<p class="text-xs text-center p-2 text-gray-400">Bộ từ này trống.</p>'}</div>`;
         container.appendChild(listContainer);
     }
@@ -73,7 +91,7 @@ function handleSaveWord() {
         meaning: document.getElementById('meaning-input').value.trim(),
     };
     if (!word.kanji || !word.meaning) {
-        alert("Vui lòng nhập Từ vựng và Ý nghĩa.");
+        window.showToast("Vui lòng nhập Từ vựng và Ý nghĩa.", 'error');
         return;
     }
     if (id) { window.editWord(listName, parseInt(id), word); }
@@ -81,6 +99,7 @@ function handleSaveWord() {
     hideModals();
     renderVocabLists();
     updateStats();
+    window.showToast(id ? 'Đã cập nhật từ!' : 'Đã thêm từ mới!', 'success');
     window.logEvent && window.logEvent('save_word', { list: listName, word: word.kanji });
 }
 
@@ -111,10 +130,9 @@ function handleSaveSettings() {
     window.saveStorageWarning(newWarning);
 
     hideModals();
-    alert('Đã lưu cài đặt!');
+    window.showToast('Đã lưu cài đặt!', 'success');
     window.logEvent && window.logEvent('save_settings');
 }
-
 
 // --- KHỞI TẠO APP VÀ GẮN SỰ KIỆN ---
 function initApp() {
@@ -129,32 +147,53 @@ function initApp() {
     
     // Nút "Thêm Danh Sách"
     document.getElementById('btn-add-list')?.addEventListener('click', () => {
-        const name = prompt('Tên danh sách mới:');
-        if (name && name.trim()) {
-            window.saveWordLists({ ...window.getWordLists(), [name.trim()]: [] });
-            renderVocabLists();
-            updateStats();
-            window.logEvent && window.logEvent('add_list', { list: name });
+        const input = document.getElementById('new-list-name-input');
+        const errorEl = document.getElementById('add-list-error');
+        if (input) input.value = '';
+        if (errorEl) errorEl.textContent = '';
+        showModal('add-list-modal');
+        input?.focus();
+    });
+
+    document.getElementById('save-new-list-btn')?.addEventListener('click', () => {
+        const input = document.getElementById('new-list-name-input');
+        const errorEl = document.getElementById('add-list-error');
+        const name = input.value.trim();
+        if (!name) {
+            if (errorEl) errorEl.textContent = 'Tên bộ từ không được để trống.';
+            return;
         }
+        const currentLists = window.getWordLists() || {};
+        if (currentLists[name]) {
+            if (errorEl) errorEl.textContent = 'Tên này đã tồn tại. Vui lòng chọn tên khác.';
+            return;
+        }
+        window.saveWordLists({ ...currentLists, [name]: [] });
+        hideModals();
+        renderVocabLists();
+        updateStats();
+        window.showToast('Đã tạo bộ từ mới!', 'success');
+        window.logEvent && window.logEvent('add_list', { list: name });
     });
     
     // Xử lý Import/Export
     const importFileInput = document.getElementById('import-file-input');
     document.getElementById('btn-import').addEventListener('click', () => importFileInput.click());
-    document.getElementById('btn-export').addEventListener('click', () => window.exportWordList());
-    importFileInput.addEventListener('change', (event) => {
+    document.getElementById('btn-export').addEventListener('click', () => {
+        window.exportWordLists();
+        window.showToast('Đã bắt đầu tải xuống file backup.', 'info');
+    });
+    importFileInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const jsonContent = e.target.result;
-            const success = window.importWordLists(jsonContent);
-            if (success) {
-                alert('Nhập dữ liệu thành công!');
+            const result = await window.importWordLists(jsonContent);
+            window.showToast(result.message, result.success ? 'success' : 'error');
+            if (result.success) {
                 renderVocabLists();
                 updateStats();
-            } else {
-                alert('Lỗi: Dữ liệu trong tệp không hợp lệ.');
             }
             importFileInput.value = '';
         };
@@ -164,12 +203,41 @@ function initApp() {
     // Nút "Lưu" trong modal thêm/sửa từ
     document.getElementById('save-word-btn').addEventListener('click', handleSaveWord);
 
+    // Xử lý modal xác nhận xóa
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', () => {
+            const action = confirmDeleteBtn.dataset.action;
+            const listName = confirmDeleteBtn.dataset.listName;
+            const wordId = confirmDeleteBtn.dataset.wordId;
+
+            if (action === 'delete-list') {
+                window.deleteList(listName);
+                window.showToast(`Đã xóa bộ từ "${listName}"!`, 'success');
+            } else if (action === 'delete-word') {
+                window.deleteWord(listName, parseInt(wordId));
+                window.showToast('Đã xóa từ thành công!', 'success');
+            }
+
+            hideModals();
+            renderVocabLists();
+            updateStats();
+            delete confirmDeleteBtn.dataset.action;
+            delete confirmDeleteBtn.dataset.listName;
+            delete confirmDeleteBtn.dataset.wordId;
+        });
+    }
+
     // Event Delegation cho các nút trong danh sách
     document.getElementById('vocab-lists-area').addEventListener('click', e => {
-        const target = e.target;
-        const listName = target.dataset.listName;
+        const addBtn = e.target.closest('.add-word-btn');
+        const editBtn = e.target.closest('.edit-word-btn');
+        const deleteWordBtn = e.target.closest('.delete-word-btn');
+        const deleteListBtn = e.target.closest('.delete-list-btn');
+        const clozeStoryBtn = e.target.closest('.cloze-story-btn');
 
-        if (target.classList.contains('add-word-btn')) {
+        if (addBtn) {
+            const listName = addBtn.dataset.listName;
             document.getElementById('word-modal-title').textContent = `Thêm từ vào bộ "${listName}"`;
             document.getElementById('word-id-input').value = '';
             document.getElementById('word-list-name-input').value = listName;
@@ -177,10 +245,9 @@ function initApp() {
             document.getElementById('reading-input').value = '';
             document.getElementById('meaning-input').value = '';
             showModal('add-edit-word-modal');
-        }
-
-        if (target.classList.contains('edit-word-btn')) {
-            const wordId = parseInt(target.dataset.wordId);
+        } else if (editBtn) {
+            const listName = editBtn.dataset.listName;
+            const wordId = parseInt(editBtn.dataset.wordId);
             const word = window.getWordLists()[listName].find(w => w.id === wordId);
             if (word) {
                 document.getElementById('word-modal-title').textContent = 'Sửa từ';
@@ -191,38 +258,49 @@ function initApp() {
                 document.getElementById('meaning-input').value = word.meaning;
                 showModal('add-edit-word-modal');
             }
-        }
-        
-        if (target.classList.contains('delete-word-btn')) {
-            const wordId = parseInt(target.dataset.wordId);
+        } else if (deleteWordBtn) {
+            const listName = deleteWordBtn.dataset.listName;
+            const wordId = deleteWordBtn.dataset.wordId;
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            if (confirmBtn) {
+                confirmBtn.dataset.action = 'delete-word';
+                confirmBtn.dataset.listName = listName;
+                confirmBtn.dataset.wordId = wordId;
+            }
             document.getElementById('confirm-delete-title').textContent = 'Xác nhận xóa từ';
             document.getElementById('confirm-delete-message').textContent = 'Bạn có chắc chắn muốn xóa từ này không?';
             showModal('confirm-delete-modal');
-            
-            document.getElementById('confirm-delete-btn').onclick = () => {
-                window.deleteWord(listName, wordId);
-                hideModals();
-                renderVocabLists();
-                updateStats();
-            };
-        }
-
-        if (target.classList.contains('delete-list-btn')) {
+        } else if (deleteListBtn) {
+            const listName = deleteListBtn.dataset.listName;
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            if (confirmBtn) {
+                confirmBtn.dataset.action = 'delete-list';
+                confirmBtn.dataset.listName = listName;
+            }
             document.getElementById('confirm-delete-title').textContent = 'Xác nhận xóa bộ từ';
             document.getElementById('confirm-delete-message').textContent = `Bạn có chắc chắn muốn xóa TOÀN BỘ bộ từ "${listName}" không?`;
             showModal('confirm-delete-modal');
+        } else if (clozeStoryBtn) {
+            const listName = clozeStoryBtn.dataset.listName;
+            const lists = window.getWordLists();
+            const wordList = lists[listName];
 
-            document.getElementById('confirm-delete-btn').onclick = () => {
-                window.deleteList(listName);
-                hideModals();
-                renderVocabLists();
-                updateStats();
-            };
+            if (!window.getApiKey()) {
+                window.showToast('Vui lòng nhập khóa API Gemini trong Cài đặt.', 'error');
+                return;
+            }
+            if (!wordList || wordList.length < 3) {
+                window.showToast('Cần ít nhất 3 từ vựng trong bộ này để tạo truyện.', 'error');
+                return;
+            }
+            const shuffled = window.shuffle ? window.shuffle([...wordList]) : [...wordList];
+            const wordsForStory = shuffled.slice(0, Math.min(5, wordList.length));
+            window.createClozeStory(wordsForStory);
         }
     });
 
     // Các nút Hủy (cancel) trên các modal
-    document.querySelectorAll('.btn-cancel, #btn-settings-cancel').forEach(btn => {
+    document.querySelectorAll('.btn-cancel').forEach(btn => {
         btn.addEventListener('click', hideModals);
     });
     
@@ -232,17 +310,16 @@ function initApp() {
     // Sự kiện cho nút Lưu trong Modal Cài đặt
     document.getElementById('btn-settings-save').addEventListener('click', handleSaveSettings);
 
-    // --- GẮN SỰ KIỆN CHO CÁC NÚT MINI-GAME ---
+    // GẮN SỰ KIỆN CHO CÁC NÚT MINI-GAME
     function launchGame(gameType) {
         const lists = window.getWordLists ? window.getWordLists() : {};
-        const firstListName = Object.keys(lists)[0];
-
-        if (!firstListName || lists[firstListName].length === 0) {
-            alert('Vui lòng tạo hoặc nhập một bộ từ vựng có từ để bắt đầu chơi!');
+        const select = document.getElementById('game-list-select');
+        const selectedName = select ? select.value : (Object.keys(lists)[0] || '');
+        if (!selectedName || !lists[selectedName] || lists[selectedName].length === 0) {
+            window.showToast('Vui lòng chọn một bộ từ có dữ liệu để chơi.', 'error');
             return;
         }
-
-        const wordList = lists[firstListName];
+        const wordList = lists[selectedName];
         sessionStorage.setItem('jMasterGameType', gameType);
         sessionStorage.setItem('jMasterWordList', JSON.stringify(wordList));
         window.location.href = 'src/game.html';
@@ -256,59 +333,10 @@ function initApp() {
 
 // Xử lý lỗi toàn cục
 window.onerror = function(msg, url, line, col, error) {
-    if (window.showError) window.showError(`Lỗi: ${msg} (${url}:${line})`);
-    window.logEvent && window.logEvent('error', {msg, url, line, col, error});
+    if (window.showError) showError(`Lỗi: ${msg} (${url}:${line})`);
+    if (window.logEvent) window.logEvent('error', {msg, url, line, col, error});
     return true;
 };
 
 // Khởi chạy ứng dụng khi trang đã tải xong
-window.onload = initApp;
-try { renderVocabLists = renderVocabListsOverride; } catch (e) { try { window.renderVocabLists = renderVocabListsOverride; } catch(_){} }
-
-// Override: render vocab list with 3 parallel columns (Kanji / Đọc / Nghĩa)
-function renderVocabListsOverride() {
-    const lists = window.getWordLists ? window.getWordLists() : {};
-    const container = document.getElementById('vocab-lists-area');
-    if (!container) return;
-    container.innerHTML = '';
-    if (Object.keys(lists).length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Chưa có bộ từ nào. Hãy tạo một bộ mới!</p>';
-        return;
-    }
-    for (const listName in lists) {
-        const listContainer = document.createElement('div');
-        listContainer.className = 'bg-gray-50 p-4 rounded-lg mb-4 shadow-sm';
-        const words = lists[listName] || [];
-
-        const headerRow = `
-            <div class="grid grid-cols-4 gap-4 text-xs font-semibold text-gray-500 border-b pb-2">
-                <div>Kanji</div>
-                <div>Đọc</div>
-                <div>Nghĩa</div>
-                <div class="text-right">Thao tác</div>
-            </div>`;
-
-        const wordsHTML = words.map(word => `
-            <div class="word-item grid grid-cols-4 items-center gap-4 border-b py-2">
-                <div class="jp-font font-semibold">${word.kanji || ''}</div>
-                <div class="text-sm text-gray-700">${word.reading || ''}</div>
-                <div class="text-sm text-gray-700">${word.meaning || ''}</div>
-                <div class="flex gap-2 justify-self-end">
-                    <button class="edit-word-btn text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Sửa</button>
-                    <button class="delete-word-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Xóa</button>
-                </div>
-            </div>`).join('');
-
-        listContainer.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-bold text-gray-800">${listName} (${words.length} từ)</h3>
-                <div class="flex gap-2">
-                    <button class="add-word-btn text-xs bg-green-100 hover:bg-green-200 text-green-700 py-1 px-2 rounded" data-list-name="${listName}">Thêm từ</button>
-                    <button class="delete-list-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}">Xóa bộ</button>
-                </div>
-            </div>
-            ${headerRow}
-            <div class="space-y-1">${wordsHTML || '<p class="text-xs text-center p-2 text-gray-400">Bộ từ này trống.</p>'}</div>`;
-        container.appendChild(listContainer);
-    }
-}
+document.addEventListener('DOMContentLoaded', initApp);

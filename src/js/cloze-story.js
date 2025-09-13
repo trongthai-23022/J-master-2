@@ -1,61 +1,123 @@
-// Cloze Story AI: Tạo truyện chêm bằng Gemini API
-async function createClozeStory(apiKey, vocabList) {
-    const story = await generateClozeStory(apiKey, vocabList);
-    if (story) renderClozeStory(story, vocabList);
-    return story;
+
+/**
+ * Bắt đầu quá trình tạo truyện chêm.
+ * @param {Array} vocabList - Danh sách từ vựng cho câu chuyện.
+ */
+async function createClozeStory(vocabList) {
+    const modalContent = document.getElementById('cloze-story-content');
+    if (!modalContent) return;
+
+    // Hiển thị trạng thái đang tải
+    modalContent.innerHTML = `
+        <div class="text-center p-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-gray-600">AI đang sáng tác, vui lòng chờ...</p>
+        </div>`;
+    showModal('cloze-story-modal');
+
+    // Gọi API để lấy nội dung truyện
+    const storyData = await window.generateClozeStory(window.getApiKey(), vocabList);
+    
+    if (storyData) {
+        renderClozeStory(storyData, vocabList, modalContent);
+    } else {
+        // Xử lý lỗi
+        modalContent.innerHTML = `
+            <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg text-center">
+                <strong>Lỗi!</strong>
+                <p>Không thể tạo truyện. Vui lòng kiểm tra lại khóa API và kết nối mạng.</p>
+            </div>`;
+    }
 }
 
-// Render UI cho cloze story
-function renderClozeStory(story, vocabList) {
-    const area = document.getElementById('cloze-story-area');
-    if (!area) return;
-    area.innerHTML = '';
-    // Tìm các chỗ trống dạng ___
-    const blanks = story.match(/___/g) || [];
-    let html = story.replace(/___/g, (m, i) => `<span class="cloze-blank" data-blank="${i}">___</span>`);
-    area.innerHTML = `<div class="mb-4">${html}</div>`;
-    // Render từ vựng để kéo thả
-    const wordBar = document.createElement('div');
-    wordBar.className = 'flex gap-2 flex-wrap mb-2';
-    vocabList.forEach(w => {
-        const btn = document.createElement('button');
-        btn.className = 'bg-blue-100 rounded px-2 py-1 text-sm cursor-move';
-        btn.textContent = w.kanji;
-        btn.draggable = true;
-        btn.ondragstart = e => {
-            e.dataTransfer.setData('text/plain', w.kanji);
-        };
-        wordBar.appendChild(btn);
+/**
+ * Render giao diện truyện chêm vào trong modal.
+ * @param {string} storyText - Toàn bộ văn bản trả về từ API.
+ * @param {Array} vocabList - Danh sách từ vựng.
+ * @param {HTMLElement} container - Vùng chứa để render giao diện.
+ */
+function renderClozeStory(storyText, vocabList, container) {
+    // Tách các phần của truyện từ văn bản API trả về
+    const clozeText = storyText.split('[STORY_CLOZE]')[1]?.split('[STORY_FULL]')[0]?.trim();
+    const fullText = storyText.split('[STORY_FULL]')[1]?.split('[STORY_TRANSLATION]')[0]?.trim();
+    const translationText = storyText.split('[STORY_TRANSLATION]')[1]?.trim();
+
+    if (!clozeText || !fullText || !translationText) {
+        container.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-800 rounded">Lỗi: Dữ liệu AI trả về không đúng định dạng.</div>`;
+        return;
+    }
+    
+    // Render HTML
+    container.innerHTML = `
+        <p class="mb-4 text-center text-gray-500">Kéo và thả các từ vào ô trống thích hợp.</p>
+        <div id="word-bank" class="flex flex-wrap justify-center gap-3 p-4 mb-6 bg-gray-100 rounded-lg">
+            </div>
+        <div id="cloze-passage" class="jp-font text-xl leading-loose mb-6 p-4 border rounded-lg bg-gray-50">
+            ${clozeText.replace(/\[____\]/g, '<span class="cloze-blank bg-blue-100 border-blue-300 border-dashed border-2 rounded inline-block w-28 h-8 mx-1 align-bottom"></span>')}
+        </div>
+        <div class="text-center">
+            <button id="check-story-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">Kiểm tra đáp án</button>
+        </div>
+        <div id="story-answer-section" class="hidden mt-6 pt-4 border-t">
+            <h4 class="text-lg font-bold mb-2 text-green-700">Truyện Hoàn Chỉnh</h4>
+            <p class="jp-font bg-green-50 p-3 rounded mb-4">${fullText}</p>
+            <h4 class="text-lg font-bold mb-2 text-blue-700">Bản Dịch Tiếng Việt</h4>
+            <p class="bg-blue-50 p-3 rounded">${translationText}</p>
+        </div>
+    `;
+
+    // Điền từ vào ngân hàng từ (word bank)
+    const wordBank = container.querySelector('#word-bank');
+    if(window.shuffle) window.shuffle(vocabList);
+    vocabList.forEach(word => {
+        const wordEl = document.createElement('div');
+        wordEl.className = 'word-bank-item jp-font px-3 py-1 bg-white border rounded-full shadow-sm cursor-grab active:cursor-grabbing';
+        wordEl.textContent = word.kanji;
+        wordEl.draggable = true;
+        wordBank.appendChild(wordEl);
     });
-    area.appendChild(wordBar);
-    // Xử lý kéo thả vào chỗ trống
-    area.querySelectorAll('.cloze-blank').forEach(blank => {
-        blank.ondragover = e => e.preventDefault();
-        blank.ondrop = e => {
+
+    // Thêm các trình xử lý sự kiện
+    container.querySelector('#check-story-btn').addEventListener('click', () => {
+        container.querySelector('#story-answer-section').classList.remove('hidden');
+    });
+    addDragDropListeners(container);
+}
+
+// Hàm xử lý kéo thả
+function addDragDropListeners(container) {
+    let draggedItem = null;
+    container.querySelectorAll('.word-bank-item').forEach(item => {
+        item.addEventListener('dragstart', e => {
+            draggedItem = e.target;
+            setTimeout(() => e.target.classList.add('opacity-50'), 0);
+        });
+        item.addEventListener('dragend', e => {
+            e.target.classList.remove('opacity-50');
+        });
+    });
+
+    container.querySelectorAll('.cloze-blank').forEach(blank => {
+        blank.addEventListener('dragover', e => {
             e.preventDefault();
-            const word = e.dataTransfer.getData('text/plain');
-            blank.textContent = word;
-            blank.classList.add('bg-green-100');
-        };
+            blank.classList.add('bg-blue-200');
+        });
+        blank.addEventListener('dragleave', () => {
+            blank.classList.remove('bg-blue-200');
+        });
+        blank.addEventListener('drop', e => {
+            e.preventDefault();
+            blank.classList.remove('bg-blue-200');
+            if (draggedItem && !blank.textContent) {
+                blank.textContent = draggedItem.textContent;
+                blank.classList.add('text-center', 'jp-font', 'text-blue-800');
+                draggedItem.remove(); // Xóa từ khỏi ngân hàng
+                draggedItem = null;
+            }
+        });
     });
 }
 
-// Khởi động từ UI
-function launchClozeStoryAI() {
-    // Lấy API key và danh sách từ vựng
-    const apiKey = (typeof window.getApiKey === 'function' ? window.getApiKey() : (window.geminiApiKey || ''));
-    const lists = window.getWordLists ? window.getWordLists() : {};
-    const firstList = Object.values(lists)[0] || [];
-    createClozeStory(apiKey, firstList);
-}
-
-// Gắn vào nút UI
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('btn-gen-cloze');
-    if (btn) btn.onclick = launchClozeStoryAI;
-});
-
-// Expose for potential external use
+// Gán hàm chính vào window
 window.createClozeStory = createClozeStory;
-window.renderClozeStory = renderClozeStory;
 

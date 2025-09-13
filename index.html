@@ -14,7 +14,36 @@
    <script type="module" src="src/js/app.js"></script>
    <script type="module" src="src/js/game-launcher.js"></script>
    <style>
-       /* ...existing style code... */
+       .toast {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    border-left-width: 4px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.4s cubic-bezier(0.21, 1.02, 0.73, 1);
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+.toast-success {
+    background-color: #f0fdf4; /* green-50 */
+    border-color: #22c55e; /* green-500 */
+    color: #15803d; /* green-700 */
+}
+.toast-error {
+    background-color: #fef2f2; /* red-50 */
+    border-color: #ef4444; /* red-500 */
+    color: #b91c1c; /* red-700 */
+}
+.toast-info {
+    background-color: #eff6ff; /* blue-50 */
+    border-color: #3b82f6; /* blue-500 */
+    color: #1d4ed8; /* blue-700 */
+}
    </style>
 </head>
 <body class="p-4 md:p-6">
@@ -66,19 +95,36 @@
                 </div>
              </div>
 
-             <!-- AI Cloze Story -->
-             <div class="bg-white rounded shadow p-4 mb-4">
-                <div class="flex items-center justify-between mb-2">
-                   <h2 class="font-semibold text-xl">Cloze Story AI</h2>
-                   <button id="btn-gen-cloze" class="px-2 py-1 rounded bg-purple-100 hover:bg-purple-200 text-sm">Tạo Story</button>
+             <!-- Modal Truyện Chêm AI -->
+             <div id="cloze-story-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+                   <div class="flex justify-between items-center mb-4">
+                       <h3 class="text-xl font-bold">Truyện Chêm AI</h3>
+                       <button class="btn-cancel p-2 rounded-full hover:bg-gray-200">&times;</button>
+                   </div>
+                   <div id="cloze-story-content" class="overflow-y-auto flex-grow">
+                   </div>
                 </div>
-                <div id="cloze-story-area" class="text-sm text-gray-700">AI sẽ tạo câu chuyện điền từ dựa trên từ vựng bạn chọn.</div>
              </div>
           </main>
        </div>
     </div>
 
     <!-- Modal Settings -->
+     <div id="add-list-modal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+   <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4">Tạo bộ từ mới</h3>
+      <div class="space-y-2">
+         <label for="new-list-name-input" class="text-sm font-medium text-gray-700">Tên bộ từ</label>
+         <input type="text" id="new-list-name-input" placeholder="Ví dụ: N5 - Bài học 1" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+         <p id="add-list-error" class="text-red-600 text-sm h-4"></p>
+      </div>
+      <div class="flex justify-end gap-3 mt-4">
+         <button class="btn-cancel px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">Hủy</button>
+         <button id="save-new-list-btn" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Tạo bộ từ</button>
+      </div>
+   </div>
+</div>
      <div id="modal-settings" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
    <div class="bg-white rounded shadow-lg p-6 w-full max-w-md">
       <h2 class="font-semibold text-lg mb-4">Cài đặt</h2>
@@ -144,5 +190,7 @@
     </div>
 </div>
 <input type="file" id="import-file-input" class="hidden" accept=".json">
+<div id="toast-container" class="fixed top-4 right-4 z-[100] w-full max-w-xs space-y-3">
+    </div>
 </body>
 </html>

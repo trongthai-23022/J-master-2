@@ -1,7 +1,10 @@
 // Web Speech API usage example: Phát âm tiếng Nhật
 function speakJapanese(text) {
     if (!('speechSynthesis' in window)) {
-        alert('Trình duyệt của bạn không hỗ trợ Web Speech API.');
+        if (!window.speechApiNotified) {
+            window.showToast('Trình duyệt không hỗ trợ phát âm.', 'error');
+            window.speechApiNotified = true;
+        }
         return;
     }
     const utter = new window.SpeechSynthesisUtterance(text);
