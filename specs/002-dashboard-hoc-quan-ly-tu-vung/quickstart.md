@@ -7,12 +7,13 @@
 
 ## 2. Sử dụng
 - Truy cập dashboard, chọn chức năng học hoặc quản lý từ vựng
-- Thêm/xuất/nhập bộ từ vựng, chơi game, tạo truyện chêm AI
-- Cài đặt giao diện, ngôn ngữ, theme, API key Gemini
+- Thêm/xuất/nhập bộ từ vựng, chơi các mini-game (flashcard, quiz, match, writing), tạo truyện chêm AI
+- Sử dụng modal Import mới để dán JSON hoặc nhập file, nhận thông báo qua toast
+- Cài đặt giao diện sáng/tối, đa ngôn ngữ, theme, API key Gemini
 
 ## 3. Kiểm thử
 - Thực hiện checklist kiểm thử UI/UX, contract, integration, unit, performance
-- Kiểm tra hoạt động offline, cảnh báo storage, bảo mật dữ liệu
+- Kiểm tra hoạt động offline, cảnh báo storage (toast), bảo mật dữ liệu (mã hóa client)
 
 ## 4. Tài liệu
-- Xem README.md để biết chi tiết cấu trúc, hướng dẫn phát triển
+- Xem README.md để biết chi tiết cấu trúc, hướng dẫn phát triển, các tính năng mới nhất

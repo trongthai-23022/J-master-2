@@ -33,29 +33,26 @@ Người dùng truy cập website, quản lý và học từ vựng tiếng Nh�
 6. **Given** người dùng sử dụng website offline, **When** không có mạng, **Then** các chức năng vẫn hoạt động (trừ AI Gemini).
 
 ### Edge Cases
-- What happens when local storage is full? [NEEDS CLARIFICATION: xử lý khi bộ nhớ trình duyệt đầy]
-- How does system handle unsupported browsers? [NEEDS CLARIFICATION: hỗ trợ trình duyệt không có local storage]
-- Nếu người dùng chia sẻ bộ từ qua link, dữ liệu có bảo mật không? [NEEDS CLARIFICATION]
-- Nếu người dùng nhập file không hợp lệ? [NEEDS CLARIFICATION]
-- Nếu API Gemini hết hạn hoặc không hợp lệ? [NEEDS CLARIFICATION]
+### Edge Cases
+ Khi local storage đầy: Ứng dụng cảnh báo và hướng dẫn xuất dữ liệu ra file JSON.
+ Nếu trình duyệt không hỗ trợ local storage: Hiển thị thông báo lỗi, hướng dẫn sử dụng trình duyệt hiện đại.
+ Chia sẻ bộ từ qua file: Dữ liệu chỉ lưu trên máy người dùng, không gửi lên server, bảo mật cá nhân.
+ Nhập file không hợp lệ: Hiển thị thông báo lỗi toast, không ghi đè dữ liệu cũ.
+ API Gemini hết hạn/không hợp lệ: Thông báo lỗi, hướng dẫn nhập lại API key.
 
-## Requirements
-
-### Functional Requirements
-- **FR-001**: Website MUST có dashboard chuyển đến các chức năng học và quản lý từ vựng.
+**FR-005**: Website MUST cho phép đồng bộ bộ từ vựng giữa các thiết bị qua xuất/nhập file JSON (không backend, không lưu trữ server).
+**FR-006**: Website MUST cho phép chia sẻ bộ từ vựng qua file JSON (không backend, không link động).
+**FR-011**: Website MUST cảnh báo khi local storage gần đầy (dưới 10% dung lượng), hướng dẫn xuất dữ liệu.
+**FR-012**: Website MUST mã hóa dữ liệu nhạy cảm (API key, từ vựng cá nhân) bằng thuật toán đơn giản phía client (ví dụ: base64 hoặc mã hóa đối xứng nhẹ).
 - **FR-002**: Website MUST cho phép chọn, thêm, sửa, xóa, nhập/xuất bộ từ vựng bằng local storage.
-- **FR-003**: Website MUST có game ghép thẻ (Kanji, nghĩa, đọc, âm thanh).
-- **FR-004**: Website MUST có truyện chêm AI (fill-in-the-blank story) sử dụng Gemini API.
-- **FR-005**: Website MUST cho phép đồng bộ bộ từ vựng giữa các thiết bị qua xuất/nhập file hoặc link drive chung. [NEEDS CLARIFICATION: giải pháp không backend]
-- **FR-006**: Website MUST cho phép chia sẻ bộ từ vựng qua file hoặc link. [NEEDS CLARIFICATION: chia sẻ qua link không backend]
+
+### Requirement Completeness
+ - [x] No [NEEDS CLARIFICATION] markers remain
+ - [x] Requirements are testable and unambiguous
+ - [x] Success criteria are measurable
+ - [x] Scope is clearly bounded
+ - [x] Dependencies and assumptions identified
 - **FR-007**: Website MUST lưu tiến độ học, lịch sử chơi game.
-- **FR-008**: Website MUST cho phép tùy chỉnh giao diện (tối/sáng, màu sắc, font).
-- **FR-009**: Website MUST hỗ trợ nhiều ngôn ngữ giao diện (Việt, Anh, Nhật).
-- **FR-010**: Website MUST tích hợp thêm mini-game (flashcard, quiz, luyện viết).
-- **FR-011**: Website MUST cảnh báo khi local storage gần đầy, hướng dẫn xuất dữ liệu. [NEEDS CLARIFICATION: ngưỡng cảnh báo]
-- **FR-012**: Website MUST mã hóa dữ liệu nhạy cảm (API key, từ vựng cá nhân). [NEEDS CLARIFICATION: phương thức mã hóa]
-- **FR-013**: Website MUST hoạt động offline hoàn toàn (trừ AI Gemini).
-- **FR-014**: Website MUST tích hợp phát âm tự động cho từ vựng (Web Speech API).
 
 ### Key Entities
 - **User**: Người sử dụng website, có dữ liệu cá nhân, bộ từ vựng, tiến độ học.

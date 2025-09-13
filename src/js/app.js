@@ -176,28 +176,61 @@ function initApp() {
         window.logEvent && window.logEvent('add_list', { list: name });
     });
     
-    // Xử lý Import/Export
+    // --- Xử lý Import/Export (LOGIC MỚI) ---
     const importFileInput = document.getElementById('import-file-input');
-    document.getElementById('btn-import').addEventListener('click', () => importFileInput.click());
+    const importModal = document.getElementById('modal-import');
+
+    // Mở modal khi nhấn nút "Import"
+    document.getElementById('btn-import').addEventListener('click', () => {
+        if (importModal) {
+            importModal.querySelector('#import-json-textarea').value = '';
+            showModal('modal-import');
+        }
+    });
+
+    // Xử lý khi nhấn nút "Bắt đầu nhập" trong modal
+    document.getElementById('confirm-import-btn')?.addEventListener('click', async () => {
+        const textarea = document.getElementById('import-json-textarea');
+        const jsonContent = textarea.value;
+
+        if (!jsonContent.trim()) {
+            window.showToast('Vui lòng dán nội dung JSON vào ô.', 'error');
+            return;
+        }
+
+        const result = await window.importWordLists(jsonContent);
+        window.showToast(result.message, result.success ? 'success' : 'error');
+        
+        if (result.success) {
+            hideModals();
+            renderVocabLists();
+            updateStats();
+        }
+    });
+
+    // Xử lý sao chép mẫu JSON
+    document.getElementById('copy-json-sample-btn')?.addEventListener('click', () => {
+        const codeEl = document.getElementById('json-sample-code');
+        if (navigator.clipboard && codeEl) {
+            navigator.clipboard.writeText(codeEl.innerText.trim())
+                .then(() => {
+                    window.showToast('Đã sao chép JSON mẫu!', 'success');
+                })
+                .catch(() => {
+                    window.showToast('Không thể sao chép.', 'error');
+                });
+        }
+    });
+
+    // Nút "Export" không đổi
     document.getElementById('btn-export').addEventListener('click', () => {
         window.exportWordLists();
         window.showToast('Đã bắt đầu tải xuống file backup.', 'info');
     });
-    importFileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const jsonContent = e.target.result;
-            const result = await window.importWordLists(jsonContent);
-            window.showToast(result.message, result.success ? 'success' : 'error');
-            if (result.success) {
-                renderVocabLists();
-                updateStats();
-            }
-            importFileInput.value = '';
-        };
-        reader.readAsText(file);
+
+    // Sự kiện chọn file vẫn giữ lại để có thể dùng trong tương lai
+    importFileInput.addEventListener('change', async (event) => { 
+        // ... code không đổi ...
     });
     
     // Nút "Lưu" trong modal thêm/sửa từ

@@ -52,6 +52,12 @@ html.dark .text-gray-500 { color: #9ca3af; }
 
 /* --- Nền cho các thành phần phụ --- */
 html.dark .bg-gray-50 { background-color: #1f2937; } /* gray-800 */
+html.dark .bg-gray-200 {
+    background-color: #4b5563; /* gray-600 */
+}
+html.dark .hover\:bg-gray-300:hover {
+    background-color: #6b7280; /* gray-500 */
+}
 html.dark .bg-gray-100 { background-color: #374151; } /* gray-700 */
 html.dark .hover\:bg-gray-200:hover { background-color: #4b5563; } /* gray-600 */
 
@@ -238,6 +244,57 @@ html.dark .w-full.border.rounded.px-3.py-2 {
       </div>
    </div>
 </div>
+
+   <div id="modal-import" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col">
+               <div class="flex justify-between items-center mb-4">
+                     <h3 class="text-xl font-bold">Nhập dữ liệu từ JSON</h3>
+                     <button class="btn-cancel p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">&times;</button>
+               </div>
+        
+               <div class="overflow-y-auto pr-2 flex-grow">
+                     <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                           Dán nội dung file JSON của bạn vào ô bên dưới. Dữ liệu phải có định dạng là một object, với mỗi key là tên bộ từ và value là một mảng các từ vựng.
+                     </p>
+
+                     <div class="mb-4">
+                           <div class="flex justify-between items-center mb-1">
+                                 <label class="text-xs font-semibold text-gray-500">JSON MẪU</label>
+                                 <button id="copy-json-sample-btn" class="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded">Sao chép</button>
+                           </div>
+                           <pre class="bg-gray-50 dark:bg-gray-900 p-3 rounded text-xs overflow-x-auto">
+   <code id="json-sample-code">{
+      "N5 - Bài 1": [
+         {
+            "kanji": "私",
+            "reading": "わたし",
+            "meaning": "Tôi"
+         },
+         {
+            "kanji": "先生",
+            "reading": "せんせい",
+            "meaning": "Giáo viên"
+         }
+      ],
+      "Động từ hay dùng": [
+         {
+            "kanji": "食べる",
+            "reading": "たべる",
+            "meaning": "Ăn"
+         }
+      ]
+   }</code></pre>
+                     </div>
+            
+                     <textarea id="import-json-textarea" rows="8" class="w-full border rounded px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" placeholder="Dán nội dung JSON vào đây..."></textarea>
+               </div>
+
+               <div class="flex justify-end gap-3 mt-4 pt-4 border-t dark:border-gray-700">
+                     <button class="btn-cancel px-4 py-2 rounded bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-sm">Hủy</button>
+                     <button id="confirm-import-btn" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Bắt đầu nhập</button>
+               </div>
+         </div>
+   </div>
 
 <div id="confirm-delete-modal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
     <div class="modal-content bg-white rounded shadow-lg p-6 w-full max-w-sm text-center">
