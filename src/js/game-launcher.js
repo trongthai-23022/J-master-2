@@ -58,5 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
   bind('btn-quiz', 'quiz');
   bind('btn-writing', 'writing');
   bind('btn-match', 'match-game');
+  bind('btn-ai-quiz', 'ai-quiz');
 });
 

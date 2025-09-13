@@ -25,27 +25,24 @@ document.addEventListener('DOMContentLoaded', () => {
     switch (gameType) {
         case 'flashcard':
             gameTitleEl.textContent = 'Game: Flashcard';
-            // Gọi hàm từ minigames.js
             window.startFlashcardGame(wordList, gameContainerEl);
             break;
         case 'quiz':
             gameTitleEl.textContent = 'Game: Quiz';
-            // Gọi hàm từ minigames.js
             window.startQuizGame(wordList, gameContainerEl);
             break;
         case 'writing':
             gameTitleEl.textContent = 'Game: Luyện viết';
-             // Gọi hàm từ minigames.js
             window.startWritingGame(wordList, gameContainerEl);
             break;
         case 'match-game':
             gameTitleEl.textContent = 'Game: Ghép thẻ';
-            // Gọi hàm từ match-game.js
             window.launchMatchGame(wordList, gameContainerEl);
             break;
-        // Thêm các game khác ở đây
-        // case 'cloze-story': ...
-
+        case 'ai-quiz':
+            gameTitleEl.textContent = 'Game: AI Quiz';
+            window.startAIQuizGame(wordList, gameContainerEl);
+            break;
         default:
             gameTitleEl.textContent = 'Lỗi';
             gameContainerEl.innerHTML = `<p class="text-red-600">Loại game không được hỗ trợ: ${gameType}</p>`;

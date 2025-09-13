@@ -1,3 +1,4 @@
+import { generateClozeStory } from './gemini.js';
 
 /**
  * Bắt đầu quá trình tạo truyện chêm.
@@ -16,7 +17,7 @@ async function createClozeStory(vocabList) {
     showModal('cloze-story-modal');
 
     // Gọi API để lấy nội dung truyện
-    const storyData = await window.generateClozeStory(window.getApiKey(), vocabList);
+    const storyData = await generateClozeStory(window.getApiKey(), vocabList);
     
     if (storyData) {
         renderClozeStory(storyData, vocabList, modalContent);

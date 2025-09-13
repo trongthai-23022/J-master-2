@@ -1,4 +1,4 @@
-// Thay thế toàn bộ nội dung file: src/js/manager.js
+// src/js/manager.js -- PHIÊN BẢN SỬA LỖI HOÀN CHỈNH
 
 const STORAGE_KEY = 'jMasterVocabApp';
 
@@ -6,24 +6,38 @@ function getWordLists() {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
 }
 
+function saveWordLists(lists) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
+    triggerChange();
+}
+
 function addWord(listName, word) {
     const lists = getWordLists();
     if (!lists[listName]) lists[listName] = [];
+    // Gán ID duy nhất nếu chưa có
+    if (!word.id) {
+        word.id = Date.now();
+    }
     lists[listName].push(word);
     saveWordLists(lists);
 }
 
 function editWord(listName, wordId, newWord) {
     const lists = getWordLists();
-    const idx = lists[listName].findIndex(w => w.id === wordId);
-    if (idx > -1) lists[listName][idx] = newWord;
-    saveWordLists(lists);
+    const list = lists[listName] || [];
+    const wordIndex = list.findIndex(w => w.id === wordId);
+    if (wordIndex > -1) {
+        lists[listName][wordIndex] = newWord;
+        saveWordLists(lists);
+    }
 }
 
 function deleteWord(listName, wordId) {
     const lists = getWordLists();
-    lists[listName] = lists[listName].filter(w => w.id !== wordId);
-    saveWordLists(lists);
+    if (lists[listName]) {
+        lists[listName] = lists[listName].filter(w => w.id !== wordId);
+        saveWordLists(lists);
+    }
 }
 
 function deleteList(listName) {
@@ -32,47 +46,38 @@ function deleteList(listName) {
     saveWordLists(lists);
 }
 
-function validateWord(word) {
-    return word && word.kanji && word.reading && word.meaning;
-}
-
-function exportWordLists() {
-    return JSON.stringify(getWordLists(), null, 2);
-}
-
-function getStats() {
-    const lists = getWordLists();
-    let vocabCount = 0;
-    let listCount = Object.keys(lists).length;
-    Object.values(lists).forEach(arr => vocabCount += arr.length);
-    return { vocabCount, listCount };
-}
-
-let changeCallbacks = [];
-function onWordListsChange(cb) {
-    changeCallbacks.push(cb);
-}
-
-function triggerChange() {
-    changeCallbacks.forEach(cb => cb(getWordLists()));
-}
-
-function saveWordLists(lists) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
-    triggerChange();
-}
-
+// === PHẦN SỬA LỖI QUAN TRỌNG ===
 /**
- * NÂNG CẤP: Xử lý nhập dữ liệu JSON với các tùy chọn Ghi đè, Hợp nhất, Bỏ qua.
- * @param {string} jsonStr - Nội dung file JSON.
- * @returns {Promise<object>} - Promise giải quyết với kết quả { success: boolean, message: string }.
+ * Xuất toàn bộ dữ liệu từ vựng ra file 'j-master-backup.json'.
+ * Hàm này sẽ tạo và tự động tải file về máy người dùng.
  */
+function exportWordLists() {
+    const lists = getWordLists();
+    // Chuyển object thành chuỗi JSON định dạng đẹp
+    const jsonString = JSON.stringify(lists, null, 2);
+    // Tạo một đối tượng Blob (Binary Large Object)
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    // Tạo một URL tạm thời cho Blob
+    const url = URL.createObjectURL(blob);
+    
+    // Tạo một thẻ <a> ẩn để kích hoạt việc tải file
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'j-master-backup.json'; // Tên file khi tải về
+    document.body.appendChild(a); // Thêm vào trang
+    a.click(); // Giả lập hành động click để tải
+    
+    // Dọn dẹp
+    document.body.removeChild(a); // Xóa thẻ <a>
+    URL.revokeObjectURL(url); // Giải phóng URL tạm thời
+}
+
 async function importWordLists(jsonStr) {
     let importedLists;
     try {
         importedLists = JSON.parse(jsonStr);
-        if (typeof importedLists !== 'object' || importedLists === null) {
-            throw new Error("Dữ liệu JSON phải là một object chứa các bộ từ.");
+        if (typeof importedLists !== 'object' || importedLists === null || Array.isArray(importedLists)) {
+            throw new Error("Dữ liệu JSON phải là một object chứa các bộ từ (không phải là một mảng).");
         }
     } catch (e) {
         return { success: false, message: `Lỗi đọc file JSON: ${e.message}` };
@@ -82,11 +87,15 @@ async function importWordLists(jsonStr) {
     const newLists = { ...currentLists };
     let conflicts = 0;
     let newWordsCount = 0;
+    let nextId = Date.now();
 
     for (const listName in importedLists) {
         if (!Array.isArray(importedLists[listName])) continue;
 
-        const wordsToImport = importedLists[listName];
+        const wordsToImport = importedLists[listName].map(word => ({
+            ...word,
+            id: typeof word.id === 'number' ? word.id : nextId++
+        }));
 
         if (newLists[listName]) { // Xung đột
             conflicts++;
@@ -101,8 +110,7 @@ async function importWordLists(jsonStr) {
                 newLists[listName] = wordsToImport;
             }
             // Bỏ qua nếu choice === 'skip'
-        } else {
-            // Bộ từ mới
+        } else { // Bộ từ mới
             newLists[listName] = wordsToImport;
             newWordsCount += wordsToImport.length;
         }
@@ -118,16 +126,9 @@ async function importWordLists(jsonStr) {
     } else {
         message = `Không có dữ liệu mới nào được nhập.`;
     }
-
     return { success: true, message };
 }
 
-/**
- * Hiển thị modal cho phép người dùng giải quyết xung đột khi import.
- * @param {string} listName - Tên bộ từ bị trùng.
- * @param {number} newCount - Số lượng từ trong bộ từ sắp import.
- * @returns {Promise<string>} - Promise giải quyết với lựa chọn của người dùng ('merge', 'overwrite', 'skip').
- */
 function showConflictResolutionModal(listName, newCount) {
     return new Promise((resolve) => {
         const modal = document.getElementById('confirm-delete-modal');
@@ -146,6 +147,11 @@ function showConflictResolutionModal(listName, newCount) {
         
         const cleanupAndResolve = (choice) => {
             modal.classList.add('hidden');
+            // Phục hồi lại giao diện cho nút xóa
+            buttonContainer.innerHTML = `
+                <button class="btn-cancel px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Hủy</button>
+                <button id="confirm-delete-btn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Xóa</button>
+            `;
             resolve(choice);
         };
 
@@ -157,7 +163,26 @@ function showConflictResolutionModal(listName, newCount) {
     });
 }
 
-// Gán các hàm chính vào window để app.js gọi được
+function getStats() {
+    const lists = getWordLists();
+    const listCount = Object.keys(lists).length;
+    const vocabCount = Object.values(lists).reduce((sum, list) => sum + list.length, 0);
+    return { vocabCount, listCount };
+}
+
+let changeCallbacks = [];
+function onWordListsChange(cb) {
+    if (typeof cb === 'function' && !changeCallbacks.includes(cb)) {
+        changeCallbacks.push(cb);
+    }
+}
+
+function triggerChange() {
+    const lists = getWordLists();
+    changeCallbacks.forEach(cb => cb(lists));
+}
+
+// Gán các hàm vào window để có thể truy cập toàn cục
 window.getWordLists = getWordLists;
 window.saveWordLists = saveWordLists;
 window.addWord = addWord;

@@ -8,11 +8,11 @@ import './manager.js';
 import './match-game.js';
 import './cloze-story.js';
 import './settings.js';
-import './sync.js';
 import './storage-warning.js';
 import './lang.js';
 import './theme.js';
 import './encrypt.js';
+import { analyzeWordWithAI } from './ai-sensei.js';
 
 // --- CÁC HÀM TIỆN ÍCH CHO MODAL (GLOBAL) ---
 window.showModal = (modalId) => document.getElementById(modalId)?.classList.remove('hidden');
@@ -60,6 +60,7 @@ function renderVocabLists() {
                 <div class="hidden md:block text-sm text-gray-700">${word.reading || ''}</div>
                 <div class="text-sm text-gray-700 col-span-1">${word.meaning || ''}</div>
                 <div class="flex gap-2 justify-self-end col-span-3 md:col-span-1 mt-2 md:mt-0">
+                    <button class="ai-sensei-btn text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 py-1 px-2 rounded" data-word='${JSON.stringify(word)}' title="AI-Sensei Phân Tích">🤖</button>
                     <button class="edit-word-btn text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Sửa</button>
                     <button class="delete-word-btn text-xs bg-red-100 hover:bg-red-200 text-red-700 py-1 px-2 rounded" data-list-name="${listName}" data-word-id="${word.id}">Xóa</button>
                 </div>
@@ -268,6 +269,7 @@ function initApp() {
         const deleteWordBtn = e.target.closest('.delete-word-btn');
         const deleteListBtn = e.target.closest('.delete-list-btn');
         const clozeStoryBtn = e.target.closest('.cloze-story-btn');
+        const aiSenseiBtn = e.target.closest('.ai-sensei-btn');
 
         if (addBtn) {
             const listName = addBtn.dataset.listName;
@@ -329,6 +331,14 @@ function initApp() {
             const shuffled = window.shuffle ? window.shuffle([...wordList]) : [...wordList];
             const wordsForStory = shuffled.slice(0, Math.min(5, wordList.length));
             window.createClozeStory(wordsForStory);
+        } else if (aiSenseiBtn) {
+            try {
+                const wordData = JSON.parse(aiSenseiBtn.dataset.word);
+                analyzeWordWithAI(wordData);
+            } catch (error) {
+                console.error("Lỗi đọc dữ liệu từ vựng:", error);
+                window.showToast('Không thể đọc dữ liệu của từ này.', 'error');
+            }
         }
     });
 
