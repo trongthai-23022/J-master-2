@@ -116,8 +116,11 @@
         const originalText = buttonElement.innerHTML;
         buttonElement.innerHTML = '<span class="loader"></span> Đang xử lý...';
         buttonElement.disabled = true;
-    const encodedKey = localStorage.getItem('jMasterApiKey') || "";
-    const apiKey = encodedKey ? atob(encodedKey) : "";
+		const encodedKey = localStorage.getItem('jMasterApiKey') || "";
+		const apiKey = encodedKey ? atob(encodedKey) : "";
+        if (!apiKey) {
+             return Promise.reject(new Error("API Key không được tìm thấy. Vui lòng kiểm tra Cài đặt."));
+        }
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
         try {
             const response = await fetch(apiUrl, {
@@ -125,13 +128,17 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
-            if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+            if (!response.ok) {
+                 const errorBody = await response.json();
+                 const errorMessage = errorBody?.error?.message || `API call failed with status: ${response.status}`;
+                 throw new Error(errorMessage);
+            }
             const result = await response.json();
             const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-            return text ? text.replace(/\n/g, '<br>') : "Không thể nhận được phản hồi từ AI.";
+            return text;
         } catch (error) {
             console.error("Gemini API error:", error);
-            return "Đã xảy ra lỗi khi kết nối đến AI.";
+            throw error; // Re-throw the error to be caught by the calling function
         } finally {
             buttonElement.innerHTML = originalText;
             buttonElement.disabled = false;
@@ -142,6 +149,37 @@
     const statsContainer = document.getElementById('stats');
     const sidebarContainer = document.getElementById('sidebar');
     const mainPanelContainer = document.getElementById('main-panel');
+mainPanelContainer.addEventListener('click', function(e) {
+    // Tìm nút đáp án được click
+    const optionButton = e.target.closest('.ai-quiz-option');
+    if (!optionButton) return; // Nếu không phải click vào nút đáp án thì bỏ qua
+
+    const questionContainer = optionButton.closest('.ai-quiz-question');
+    // Nếu câu hỏi đã được trả lời rồi thì không làm gì cả
+    if (questionContainer.dataset.answered === 'true') return;
+
+    // Đánh dấu là đã trả lời
+    questionContainer.dataset.answered = 'true';
+    const isCorrect = optionButton.dataset.correct === 'true';
+    const allOptions = questionContainer.querySelectorAll('.ai-quiz-option');
+
+    // Vô hiệu hóa tất cả các nút và hiển thị đáp án đúng
+    allOptions.forEach(btn => {
+        btn.disabled = true;
+        const wasCorrectChoice = btn.dataset.correct === 'true';
+        if (wasCorrectChoice) {
+            btn.classList.add('border-emerald-400', 'bg-emerald-500/10', 'text-emerald-300');
+        }
+    });
+
+    // Nếu chọn sai, tô đỏ lựa chọn sai
+    if (!isCorrect) {
+        optionButton.classList.add('border-rose-500', 'bg-rose-500/10', 'text-rose-300');
+    }
+
+    // Hiển thị phần giải thích
+    questionContainer.querySelector('.ai-quiz-explain').classList.remove('hidden');
+});
     const surpriseToast = document.getElementById('surprise-toast');
     const confettiContainer = document.getElementById('confetti-container');
     const groupTabsContainer = document.getElementById('group-tabs');
@@ -229,7 +267,6 @@
                 <div class="rounded-xl bg-white/5 border border-white/10 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
                     <div class="font-semibold mb-2">Ví dụ & giải thích</div>
                     <div id="examples-container" class="space-y-3">${it.examples.map(ex => `<div class="p-3 rounded-lg bg-white/5 border border-white/10"><div class="font-semibold text-sky-200">${ex.jp}</div><div class="text-slate-300">${ex.vn}</div></div>`).join('')}</div>
-                    <div id="gemini-example-response" class="mt-4"></div>
                     <div class="mt-4 flex gap-2">
                         <button onclick="generateExample(this)" class="px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-sm flex items-center gap-2">✨ Tạo thêm ví dụ</button>
                         <button onclick="generateGrammarQuizAI(this)" class="px-4 py-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/40 text-sm flex items-center gap-2">🧠 Tạo quiz khó với AI</button>
@@ -290,53 +327,89 @@
     
     async function generateExample(buttonElement) {
         const it = grammarGroups[state.currentGroup].items[state.orders[state.currentGroup][state.indices[state.currentGroup]]];
-        const prompt = `Bạn là một giáo viên tiếng Nhật. Hãy tạo thêm 2 câu ví dụ mới và thực tế cho mẫu ngữ pháp N3 "${it.title}" (${it.meaning}). Cho mỗi câu, hãy cung cấp câu tiếng Nhật, phiên âm Hiragana, và dịch nghĩa tiếng Việt. Trình bày rõ ràng.`;
-        const responseText = await callGemini(prompt, buttonElement);
-        document.getElementById('gemini-example-response').innerHTML = `<div class="p-3 mt-3 rounded-lg bg-purple-500/10 border border-purple-400/30 gemini-response">${responseText}</div>`;
+        const responseContainer = document.getElementById('gemini-example-response');
+        responseContainer.innerHTML = '';
+        try {
+            const prompt = `Bạn là một giáo viên tiếng Nhật. Hãy tạo thêm 2 câu ví dụ mới và thực tế cho mẫu ngữ pháp N3 "${it.title}" (${it.meaning}). Cho mỗi câu, hãy cung cấp câu tiếng Nhật, phiên âm Hiragana, và dịch nghĩa tiếng Việt. Trình bày rõ ràng.`;
+            const responseText = await callGemini(prompt, buttonElement);
+            responseContainer.innerHTML = `<div class="p-3 mt-3 rounded-lg bg-purple-500/10 border border-purple-400/30 gemini-response">${responseText}</div>`;
+        } catch (error) {
+            responseContainer.innerHTML = `<div class="p-3 mt-3 rounded-lg bg-rose-500/10 border border-rose-400/30 gemini-response">Lỗi: ${error.message}</div>`;
+        }
     }
 
     async function generateGrammarQuizAI(buttonElement) {
         const it = grammarGroups[state.currentGroup].items[state.orders[state.currentGroup][state.indices[state.currentGroup]]];
-        buttonElement.innerHTML = '<span class="loader"></span> Đang tạo quiz...';
-        buttonElement.disabled = true;
-        const encodedKey = localStorage.getItem('jMasterApiKey') || "";
-        const apiKey = encodedKey ? atob(encodedKey) : "";
-        const prompt = `Bạn là một chuyên gia tạo đề thi JLPT N3. Hãy tạo ra 10 câu hỏi trắc nghiệm NGỮ PHÁP thật khó về mẫu "${it.title}" (${it.meaning}). Mỗi câu hỏi phải:
-1. Đặt một câu tiếng Nhật có chỗ trống liên quan đến mẫu này, dùng ngữ cảnh thực tế, từ vựng phong phú, cấu trúc phức tạp.
-2. Đưa ra 4 lựa chọn đáp án (options), chỉ 1 đáp án đúng (correct), các đáp án sai phải gây nhiễu mạnh.
-3. Giải thích ngắn gọn tại sao đáp án đúng là phù hợp nhất.
-4. Dịch nghĩa câu hỏi sang tiếng Việt.
-Trả về kết quả dưới dạng JSON.stringify của một mảng object, mỗi object có:
-{
-  "jp": "Câu hỏi tiếng Nhật có chỗ trống",
-  "vn": "Dịch nghĩa tiếng Việt",
-  "options": ["đáp án 1", "đáp án 2", "đáp án 3", "đáp án 4"],
-  "correct": số thứ tự đáp án đúng (0-3),
-  "explain": "giải thích ngắn gọn"
-}
-Không giải thích gì thêm, chỉ trả về JSON.`;
-        const responseText = await callGemini(prompt, buttonElement);
-        let quizHtml = '';
+        const responseContainer = document.getElementById('gemini-quiz-response');
+        responseContainer.innerHTML = ''; // Xóa kết quả cũ
+
         try {
-            const cleaned = responseText.replace(/^```json\s*|```$/g, '');
-            const quizArr = JSON.parse(cleaned);
-            quizHtml = quizArr.map((q, idx) => `
-                <div class="mb-6 p-4 rounded-xl bg-pink-500/10 border border-pink-400/30">
-                    <div class="font-bold text-pink-300 mb-1">Câu ${idx+1}:</div>
+            const prompt = `
+            Tạo 5 câu hỏi trắc nghiệm ngữ pháp tiếng Nhật trình độ N3 về mẫu: "${it.title}" (${it.meaning}).
+            YÊU CẦU:
+            - Mỗi câu hỏi phải có ngữ cảnh thực tế.
+            - 4 lựa chọn đáp án, trong đó có 1 đáp án đúng và 3 đáp án gây nhiễu hợp lý.
+            - Cung cấp giải thích ngắn gọn cho đáp án đúng.
+            - Dịch câu hỏi sang tiếng Việt.
+
+            TRẢ VỀ KẾT QUẢ DƯỚỚI DẠNG MỘT CHUỖI JSON STRINGIFY CỦA MỘT MẢNG (ARRAY) DUY NHẤT, KHÔNG GIẢI THÍCH GÌ THÊM.
+            Cấu trúc mỗi object trong mảng:
+            {
+              "jp": "Câu hỏi tiếng Nhật có chỗ trống, ví dụ: 「頭が痛いので、今日は会社を＿＿＿。」",
+              "vn": "Dịch nghĩa tiếng Việt",
+              "options": ["休みます", "休ませます", "休まなければなりません", "休みたいです"],
+              "correct": 0,
+              "explain": "Giải thích ngắn gọn tại sao đây là đáp án đúng."
+            }
+            `;
+
+            const responseText = await callGemini(prompt, buttonElement);
+
+            if (!responseText) {
+                throw new Error("AI không trả về phản hồi.");
+            }
+
+            // Dọn dẹp chuỗi JSON trả về từ AI
+            let cleanedText = responseText.trim();
+            if (cleanedText.startsWith("```json")) {
+                cleanedText = cleanedText.substring(7, cleanedText.length - 3).trim();
+            } else if (cleanedText.startsWith("```")) {
+                 cleanedText = cleanedText.substring(3, cleanedText.length - 3).trim();
+            }
+
+            const quizArr = JSON.parse(cleanedText);
+
+            if (!Array.isArray(quizArr) || quizArr.length === 0) {
+                throw new Error("Dữ liệu trả về không phải là một mảng câu hỏi hợp lệ.");
+            }
+
+            // Tạo HTML cho quiz, chuyển từ <div> sang <button> để tương tác
+            const quizHtml = quizArr.map((q, idx) => `
+                <div class="ai-quiz-question mb-6 p-4 rounded-xl bg-pink-500/10 border border-pink-400/30 gemini-response" data-question-index="${idx}">
+                    <div class="font-bold text-pink-300 mb-1">Câu hỏi AI ${idx + 1}:</div>
                     <div class="font-semibold text-sky-200">${q.jp}</div>
                     <div class="text-slate-300 mb-2">${q.vn}</div>
-                    <div class="grid md:grid-cols-2 gap-2 mb-2">
-                        ${q.options.map((op, k) => `<div class="p-2 rounded-lg border ${k===q.correct?'border-emerald-400 bg-emerald-500/10':'border-white/10 bg-white/5'}">${String.fromCharCode(65+k)}. ${op}</div>`).join('')}
+                    <div class="ai-quiz-options grid md:grid-cols-2 gap-2 mb-2">
+                        ${q.options.map((op, k) => `
+                            <button class="ai-quiz-option p-2 rounded-lg border border-white/10 bg-white/5 text-left transition hover:bg-white/10" data-correct="${k === q.correct}">
+                               ${String.fromCharCode(65 + k)}. ${op}
+                            </button>`).join('')}
                     </div>
-                    <div class="text-yellow-300 text-sm">Giải thích: ${q.explain}</div>
+                    <div class="ai-quiz-explain text-yellow-300 text-sm hidden mt-2">💡 Giải thích: ${q.explain}</div>
                 </div>
             `).join('');
-        } catch(e) {
-            quizHtml = `<div class="p-3 rounded-lg bg-rose-500/10 border border-rose-400/30">Không thể phân tích kết quả từ AI. Dữ liệu:<br>${responseText}</div>`;
+            responseContainer.innerHTML = quizHtml;
+
+        } catch (e) {
+            console.error("Lỗi khi tạo AI quiz:", e);
+            let errorMessage = `Không thể tạo quiz. Vui lòng thử lại.`;
+            if (e.message.toLowerCase().includes("json")) {
+                errorMessage = "AI đã trả về dữ liệu không hợp lệ. Vui lòng thử lại.";
+            } else if (e.message.toLowerCase().includes("api")) {
+                errorMessage = `Lỗi API: ${e.message}. Hãy kiểm tra lại API Key trong phần Cài đặt.`;
+            }
+            responseContainer.innerHTML = `<div class="p-3 rounded-lg bg-rose-500/10 border border-rose-400/30">${errorMessage}</div>`;
         }
-        document.getElementById('gemini-quiz-response').innerHTML = quizHtml;
-        buttonElement.innerHTML = '🧠 Tạo quiz khó với AI';
-        buttonElement.disabled = false;
     }
 
     async function analyzeWrongAnswer(buttonElement) {
@@ -344,9 +417,15 @@ Không giải thích gì thêm, chỉ trả về JSON.`;
         const it = group.items[state.orders[state.currentGroup][state.indices[state.currentGroup]]];
         const userAnswer = it.quiz.options[state.picked];
         const correctAnswer = it.quiz.options[it.quiz.correct];
-        const prompt = `Tôi đang làm một câu hỏi trắc nghiệm ngữ pháp JLPT N3.\nCâu hỏi là: "${it.quiz.q}"\nTôi đã chọn đáp án: "${userAnswer}"\nĐáp án đúng là: "${correctAnswer}"\n\nHãy đóng vai một gia sư AI thân thiện, giải thích cho tôi bằng tiếng Việt tại sao đáp án của tôi (${userAnswer}) lại sai trong ngữ cảnh này, và tại sao đáp án đúng (${correctAnswer}) lại là lựa chọn phù hợp nhất. Giải thích ngắn gọn, tập trung vào bản chất ngữ pháp.`;
-        const responseText = await callGemini(prompt, buttonElement);
-        document.getElementById('gemini-analysis-response').innerHTML = `<div class="p-3 mt-3 rounded-lg bg-yellow-500/10 border border-yellow-400/30 gemini-response">${responseText}</div>`;
+        const responseContainer = document.getElementById('gemini-analysis-response');
+        responseContainer.innerHTML = '';
+        try {
+            const prompt = `Tôi đang làm một câu hỏi trắc nghiệm ngữ pháp JLPT N3.\nCâu hỏi là: "${it.quiz.q}"\nTôi đã chọn đáp án: "${userAnswer}"\nĐáp án đúng là: "${correctAnswer}"\n\nHãy đóng vai một gia sư AI thân thiện, giải thích cho tôi bằng tiếng Việt tại sao đáp án của tôi (${userAnswer}) lại sai trong ngữ cảnh này, và tại sao đáp án đúng (${correctAnswer}) lại là lựa chọn phù hợp nhất. Giải thích ngắn gọn, tập trung vào bản chất ngữ pháp.`;
+            const responseText = await callGemini(prompt, buttonElement);
+            responseContainer.innerHTML = `<div class="p-3 mt-3 rounded-lg bg-yellow-500/10 border border-yellow-400/30 gemini-response">${responseText}</div>`;
+        } catch (error) {
+             responseContainer.innerHTML = `<div class="p-3 mt-3 rounded-lg bg-rose-500/10 border border-rose-400/30 gemini-response">Lỗi: ${error.message}</div>`;
+        }
     }
 
     function showSurprise(message) { surpriseToast.innerHTML = `<div class="px-4 py-2 rounded-xl bg-[#0a142c] border border-white/15 shadow-xl">${message}<button onclick="hideSurprise()" class="ml-3 text-sky-300 underline">Đóng</button></div>`; surpriseToast.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(hideSurprise, 5000); }
@@ -365,4 +444,3 @@ Không giải thích gì thêm, chỉ trả về JSON.`;
 </script>
 </body>
 </html>
-
