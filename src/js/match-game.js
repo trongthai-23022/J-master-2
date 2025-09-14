@@ -11,6 +11,7 @@ if (!window.shuffle) {
   };
 }
 if (!window.speakJapanese) {
+  //get lang from argument
   window.speakJapanese = (text) => {
     console.log(`Phát âm: ${text}`);
     if ('speechSynthesis' in window) {

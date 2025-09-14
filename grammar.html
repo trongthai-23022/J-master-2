@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JLPT N3 - Lộ trình Chinh phục Ngữ pháp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        @keyframes fall { 0% { transform: translateY(-10px); opacity: 1; } 100% { transform: translateY(100vh); opacity: 0; } }
+        .confetti-bit { position: absolute; top: 0; animation: fall 1.2s ease-in-out forwards; }
+        .gemini-response { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loader { width: 20px; height: 20px; border: 3px solid #3b82f6; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .tab-active { background-color: #3b82f6; color: white; }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-[#0b1020] to-[#111a2a] text-slate-100">
+    <div id="progress-bar" class="fixed top-0 left-0 h-1 bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400 transition-all duration-300" style="width: 0%"></div>
+
+    <header class="sticky top-0 z-30 backdrop-blur bg-[#0d142c]/80 border-b border-white/10">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 grid place-items-center font-extrabold text-[#0a1230]">N3</div>
+            <div id="header-title" class="font-bold leading-tight">Flow học liên tục (JLPT N3)</div>
+            <div id="stats" class="ml-auto flex items-center gap-2 text-sm"></div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        <div id="group-tabs" class="mb-4 flex flex-wrap gap-2 p-2 rounded-xl bg-black/20"></div>
+        <div class="grid md:grid-cols-3 gap-4">
+            <aside id="sidebar" class="md:col-span-1 space-y-3"></aside>
+            <section id="main-panel" class="md:col-span-2 space-y-4"></section>
+        </div>
+    </main>
+    
+    <div id="surprise-toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 transition-all opacity-0 pointer-events-none"></div>
+    <div id="confetti-container" class="pointer-events-none fixed inset-0 overflow-hidden z-50"></div>
+
+    <footer class="max-w-6xl mx-auto px-4 py-10 text-center text-slate-400 text-sm">
+        <div>© JLPT N3 Flow • Học nhanh – áp dụng ngay – tăng tốc độ làm bài.</div>
+    </footer>
+
+<script>
+    // --- DATABASE ---
+    const grammarGroups = {
+        group1: {
+            name: 'Nhóm 1 – Nền tảng',
+            items: [
+                { id: 'uchi-ni', title: '～うちに', marker: 'Vる/Vている/Aい/Aな/Nの + うちに', meaning: 'Trong lúc còn...', cues: ['Tranh thủ', 'Khi trạng thái chưa đổi'], tip: '💡 Mẹo: Nhấn mạnh "tranh thủ LÀM" trước khi trạng thái thay đổi. Khác với あいだに (chỉ một hành động xảy ra song song).', examples: [{jp:'忘れないうちに、メモしておこう。', vn:'Tranh thủ lúc chưa quên, hãy ghi chú lại.'}, {jp:'テレビを見ているうちに、寝てしまった。', vn:'Trong lúc đang xem TV thì tôi ngủ quên mất.'}], quiz: {q:'空欄に最も良いものを一つ選びなさい。「明るい＿＿、庭の掃除をしてしまおう。」', options:['うちに','あいだに','ときに','ばかりに'], correct:0, explain:'「うちに」dùng khi muốn tranh thủ làm gì đó trước khi trạng thái thay đổi (trời tối).'} },
+                { id: 'ippou-da', title: '～一方だ', marker: 'Vる + 一方だ', meaning: 'Ngày càng...', cues: ['Xu hướng', 'Một chiều', 'Thay đổi'], tip: '💡 Mẹo: Tìm các động từ chỉ sự thay đổi (tăng, giảm, xấu đi...). Chỉ đi với Vる.', examples: [{jp:'最近、祖母の病気は悪くなる一方だ。', vn:'Gần đây, bệnh của bà tôi ngày càng trở nên tồi tệ.'}, {jp:'円安が進み、輸入品の値段は上がる一方だ。', vn:'Đồng Yên mất giá, giá hàng nhập khẩu ngày càng tăng.'}], quiz: {q:'最近、この町の人口は＿＿＿＿一方だ。', options:['減った','減る','減り','減って'], correct:1, explain:'Cấu trúc ～一方だ đi với động từ thể từ điển (Vる).'} },
+                { id: 'okage-sei', title: '～おかげで／～せいで', marker: 'Thể TT + おかげで／せいで', meaning: 'Nhờ có / Tại vì', cues: ['Kết quả TỐT', 'Kết quả XẤU'], tip: '💡 Mẹo: Nhìn vế KẾT QUẢ. Tốt (+) chọn おかげで, Xấu (-) chọn せいで.', examples: [{jp:'友達が手伝ってくれたおかげで、仕事が早く終わった。', vn:'Nhờ bạn bè giúp đỡ mà công việc đã xong sớm.'}, {jp:'事故のせいで、電車が遅れてしまった。', vn:'Tại tai nạn mà tàu điện đã bị muộn.'}], quiz: {q:'バスが遅れた＿＿＿＿、会議に間に合わなかった。', options:['おかげで','せいで','ために','からこそ'], correct:1, explain:'Kết quả xấu (không kịp họp) nên dùng 「せいで」.'} },
+                { id: 'koto-ni-shiteiru', title: '～ことにしている／ことになっている', marker: 'Vる/Vない + ことに...', meaning: 'Tự quyết định / Đã có quy định', cues: ['Thói quen cá nhân', 'Quy tắc tập thể'], tip: '💡 Mẹo: Chủ ngữ là "tôi" (my rule) → ことにしている. Chủ ngữ là tổ chức, xã hội (public rule) → ことになっている.', examples: [{jp:'健康のため、毎朝ジョギングすることにしている。', vn:'Vì sức khỏe, tôi quyết định chạy bộ mỗi sáng.'}, {jp:'私の会社では、制服を着ることになっている。', vn:'Ở công ty tôi có quy định là phải mặc đồng phục.'}], quiz: {q:'「この学校では、教室で携帯電話を使ってはいけない＿＿＿＿。」', options:['ことにしている','ことになっている','ようになっている','つもりだ'], correct:1, explain:'Đây là quy định của trường học, không phải quyết định cá nhân.'} },
+                { id: 'you-ni-natteiru', title: '～ようになっている', marker: 'Vる/Vない + ようになっている', meaning: 'Có cơ chế/chức năng tự động', cues: ['Máy móc', 'Hệ thống'], tip: '💡 Mẹo: Gắn liền với máy móc, thiết bị, hệ thống tự động. Thấy robot, cửa tự động, điều hòa... → nghĩ ngay đến ようにしている.', examples: [{jp:'このドアは、人が近づくと自動で開くようになっている。', vn:'Cánh cửa này có chức năng tự động mở khi có người đến gần.'}], quiz: {q:'このエアコンは、設定温度になると運転が止まる＿＿＿＿。', options:['ことにした','ことになった','ようになっている','はずだ'], correct:2, explain:'Đây là chức năng tự động của máy điều hòa.'} },
+                { id: 'tsumori-da', title: '～つもりだ', marker: 'Vる/Vない + つもりだ', meaning: 'Dự định, có ý định', cues: ['Kế hoạch', 'Ý chí'], tip: '💡 Mẹo: Diễn tả ý định chắc chắn của người nói tại thời điểm nói. Phân biệt với 予定 (chỉ là lịch trình).', examples: [{jp:'大学を卒業したら、国へ帰るつもりだ。', vn:'Sau khi tốt nghiệp đại học, tôi dự định sẽ về nước.'}, {jp:'もうタバコは吸わないつもりだ。', vn:'Tôi định sẽ không hút thuốc lá nữa.'}], quiz: {q:'来年、日本へ留学する＿＿＿＿。', options:['はずだ','わけだ','つもりだ','ことだ'], correct:2, explain:'Thể hiện dự định, kế hoạch trong tương lai.'} },
+                { id: 'te-hoshii', title: '～てほしい／てもらいたい', marker: 'Vて/Vないで + ほしい', meaning: 'Muốn ai đó làm/không làm gì', cues: ['Yêu cầu', 'Nguyện vọng'], tip: '💡 Mẹo: Chủ thể muốn là "tôi", nhưng hành động là của "người khác".', examples: [{jp:'この書類、明日までにコピーしてほしいんですが。', vn:'Tôi muốn bạn photo tài liệu này trước ngày mai.'}, {jp:'部屋の中ではタバコを吸わないでほしい。', vn:'Tôi muốn bạn không hút thuốc trong phòng.'}], quiz: {q:'父に、いつまでも元気で＿＿＿＿。', options:['いてほしい','いたいだ','あるべきだ','いさせる'], correct:0, explain:'Thể hiện nguyện vọng muốn người khác (bố) làm gì đó (sống khỏe).'} },
+                { id: 'bakari-denaku', title: '～ばかりでなく', marker: 'Thể TT + ばかりでなく、～も', meaning: 'Không chỉ A mà còn B', cues: ['Thêm vào', 'Không chỉ...'], tip: '💡 Mẹo: Mẫu câu trang trọng hơn だけでなく. Vế sau thường có も.', examples: [{jp:'彼女は英語ばかりでなく、日本語も話せる。', vn:'Cô ấy không chỉ nói được tiếng Anh mà còn cả tiếng Nhật.'}], quiz: {q:'このレストランは、味が良い＿＿＿＿値段も安い。', options:['だけでなく','ばかりに','だけあって','だけの'], correct:0, explain:'Nối hai đặc điểm tốt (vị ngon, giá rẻ).'} },
+                { id: 'tekara-denaito', title: '～てからでないと…ない', marker: 'Vて + からでないと', meaning: 'Nếu chưa làm A thì không thể B', cues: ['Điều kiện tiên quyết'], tip: '💡 Mẹo: Vế sau luôn là phủ định (～ない, できない, 無理だ...).', examples: [{jp:'家族と相談してからでないと、返事はできません。', vn:'Nếu chưa thảo luận với gia đình thì tôi không thể trả lời được.'}], quiz: {q:'お金を払って＿＿＿＿、商品を受け取ることはできない。', options:['からでなくて','からでないと','からでは','からは'], correct:1, explain:'Cấu trúc cố định, diễn tả điều kiện cần phải làm trước.'} },
+                { id: 'you-ni', title: '～ように', marker: 'Vる/Vない + ように', meaning: 'Để... (mục đích)', cues: ['Mục tiêu trạng thái', 'Vô ý chí'], tip: '💡 Mẹo: Dùng cho mục đích không thể kiểm soát bằng ý chí (vd: 聞こえる, 見える, わかる). Khác với ために (dùng cho hành động có ý chí).', examples: [{jp:'日本語が話せるように、毎日勉強しています。', vn:'Để có thể nói được tiếng Nhật, tôi học mỗi ngày.'}, {jp:'忘れないように、メモしてください。', vn:'Hãy ghi chú lại để không quên.'}], quiz: {q:'風邪を＿＿＿＿ように、気をつけてください。', options:['ひかない','ひかずに','ひきたくない','ひかせない'], correct:0, explain:'Diễn tả mục đích để một trạng thái không xảy ra (không bị cảm).'} },
+                { id: 'hazu-wake', title: 'はずだ／わけだ', marker: 'Thể TT + はずだ／わけだ', meaning: 'Chắc chắn là / Thảo nào mà', cues: ['Suy luận có căn cứ', 'Hiểu ra lý do'], tip: '💡 Mẹo: はずだ là suy luận logic (A→B). わけだ là sự giác ngộ, hiểu ra ("à, ra là thế!").', examples: [{jp:'彼は昨日日本に来たばかりだから、日本語が上手なはずがない。', vn:'Anh ấy mới đến Nhật hôm qua nên chắc chắn không thể giỏi tiếng Nhật được.'}, {jp:'夜なのに電気がついている。部屋に誰かいるわけだ。', vn:'Dù là ban đêm mà đèn vẫn sáng. Thảo nào trong phòng có người.'}], quiz: {q:'「暑い＿＿＿＿。クーラーがついていないんだ。」', options:['はずだ','わけだ','つもりだ','ようだ'], correct:1, explain:'Diễn tả sự thấu hiểu, nhận ra lý do ("Thảo nào nóng thế").'} },
+                { id: 'wake-series', title: 'わけがない／ではない／にはいかない', marker: 'Vる + わけ...', meaning: 'Không thể nào / Không hẳn / Không thể (vì lý do khác)', cues: ['Phủ định mạnh', 'Phủ định một phần', 'Ràng buộc'], tip: '💡 Mẹo: ない = 100% không. ではない = không phải 100%. にはいかない = muốn làm nhưng không được (do áp lực xã hội, đạo đức).', examples: [{jp:'こんなに高いもの、私に買えるわけがない。', vn:'Đồ đắt thế này, làm sao tôi mua nổi.'}, {jp:'料理ができないわけではないが、忙しいからあまり作らない。', vn:'Không hẳn là tôi không biết nấu ăn, nhưng vì bận nên không hay nấu.'}, {jp:'大事な会議があるので、今日は休むわけにはいかない。', vn:'Vì có cuộc họp quan trọng nên hôm nay tôi không thể nghỉ được.'}], quiz: {q:'病気の子供を一人で家に置いて、仕事に行く＿＿＿＿。', options:['わけがない','わけではない','わけにはいかない','はずがない'], correct:2, explain:'Không thể đi làm vì ràng buộc về mặt tình cảm, trách nhiệm.'} },
+                { id: 'ni-chigainai', title: '～に違いない', marker: 'Thể TT + に違いない', meaning: 'Chắc chắn là, ắt hẳn là', cues: ['Suy đoán chắc chắn'], tip: '💡 Mẹo: Mức độ chắc chắn cao hơn はずだ, mang tính chủ quan của người nói nhiều hơn.', examples: [{jp:'あんなに練習したのだから、彼はきっと合格するに違いない。', vn:'Đã luyện tập nhiều như vậy, anh ấy chắc chắn sẽ đỗ.'}], quiz: {q:'あの店の前にはいつも行列ができている。きっと＿＿＿＿に違いない。', options:['おいしい','おいしくて','おいしいで','おいしさ'], correct:0, explain:'Đi với thể thông thường của tính từ.'} },
+                { id: 'koto-ni-naru', title: '～ことになる', marker: 'Vる/Vない + ことになる', meaning: 'Được quyết định là...', cues: ['Kết quả', 'Quyết định không do bản thân'], tip: '💡 Mẹo: Phân biệt với ことにする (tôi quyết định). ことになる là quyết định của người khác/tổ chức áp lên tôi.', examples: [{jp:'来月、大阪へ出張することになりました。', vn:'Đã được quyết định là tháng sau tôi sẽ đi công tác ở Osaka.'}], quiz: {q:'話し合いの結果、来週から新しいプロジェクトを始める＿＿＿＿。', options:['ことにした','ことになった','ようになった','つもりだった'], correct:1, explain:'Diễn tả một quyết định được đưa ra bởi một tập thể (kết quả cuộc họp).'} }
+            ]
+        },
+        group2: {
+            name: 'Nhóm 2 – Mở rộng',
+            items: [
+                { id: 'mitai-you-rashii', title: '～みたい／ようだ／らしい', marker: 'So sánh & Phỏng đoán', meaning: 'Giống như / Có vẻ / Nghe nói, đậm chất', cues: ['Văn nói (みたい)', 'Văn viết/trung tính (ようだ)', 'Tin đồn/Bản chất (らしい)'], tip: '💡 Mẹo: らしい có 2 nghĩa: 1. Nghe nói (tin đồn). 2. Đậm chất (男らしい). ようだ/みたいだ là phỏng đoán dựa trên những gì thấy/cảm nhận.', examples: [{jp:'今日は春らしい暖かい日ですね。', vn:'Hôm nay là một ngày ấm áp đậm chất xuân nhỉ.'}, {jp:'あの人は男みたいだけど、実は女の人だ。', vn:'Người kia trông giống con trai nhưng thực ra là con gái.'}, {jp:'天気予報によると、明日は雨が降るようです。', vn:'Theo dự báo thời tiết, có vẻ ngày mai trời sẽ mưa.'}], quiz: {q:'彼はいつも冗談ばかり言っている。本当に＿＿＿＿人だ。', options:['子供らしい','子供のような','子供みたいな','子供っぽい'], correct:3, explain:'「〜っぽい」dùng để chỉ cảm giác, ấn tượng bề ngoài, mang tính tiêu cực nhẹ.'} },
+                { id: 'kurai-hodo', title: '～くらい／ぐらい／ほど', marker: 'Thể TT + くらい/ほど', meaning: 'Đến mức, khoảng', cues: ['So sánh mức độ', 'Mức độ cao nhất (ほど～ない)'], tip: '💡 Mẹo: Cấu trúc so sánh bậc nhất: 「N ほど ～ はない」 (Không có gì ... bằng N).', examples: [{jp:'喉が痛くて、声が出ないくらいだ。', vn:'Tôi đau họng đến mức không nói ra tiếng.'}, {jp:'今年ほど雪が降った年はなかった。', vn:'Chưa có năm nào tuyết rơi nhiều như năm nay.'}], quiz: {q:'彼女＿＿＿親切な人はいない。', options:['くらい','ばかり','ほど','だけ'], correct:2, explain:'「Nほど～ない」là cấu trúc so sánh cao nhất, nghĩa là "không ai tốt bụng bằng cô ấy".'} },
+                { id: 'sae-ba', title: '～さえ～ば', marker: 'Nさえ + Vば / Aければ / Aなら / Nなら', meaning: 'Chỉ cần... là đủ', cues: ['Điều kiện tối thiểu'], tip: '💡 Mẹo: Nhấn mạnh điều kiện CỐT LÕI và DUY NHẤT. Chỉ cần có nó là mọi thứ OK.', examples: [{jp:'あなたさえいれば、他に何もいらない。', vn:'Chỉ cần có anh, em không cần gì khác nữa.'}, {jp:'住所さえ分かれば、地図で探せます。', vn:'Chỉ cần biết địa chỉ là có thể tìm bằng bản đồ.'}], quiz: {q:'お金＿＿＿あれば、何でも買えるのに。', options:['さえ','だけ','しか','こそ'], correct:0, explain:'「さえ」nhấn mạnh điều kiện tối thiểu và duy nhất.'} },
+                { id: 'shikanai', title: '～しかない', marker: 'Vる + しかない', meaning: 'Chỉ còn cách là...', cues: ['Không có lựa chọn khác'], tip: '💡 Mẹo: Diễn tả tình thế bắt buộc, không còn lựa chọn nào khác tốt hơn.', examples: [{jp:'バスも電車も止まったので、歩いて帰るしかない。', vn:'Vì xe buýt và tàu đều dừng nên chỉ còn cách đi bộ về nhà.'}], quiz: {q:'誰も手伝ってくれないから、一人で＿＿＿＿。', options:['やるべきだ','やるらしい','やるしかない','やるまい'], correct:2, explain:'Diễn tả tình huống không còn sự lựa chọn nào khác.'} },
+                { id: 'tabi-ni', title: '～たびに', marker: 'Vる/Nの + たびに', meaning: 'Cứ mỗi lần...', cues: ['Lặp lại'], tip: '💡 Mẹo: Cứ A xảy ra thì B cũng xảy ra. Luôn luôn là như vậy.', examples: [{jp:'この写真を見るたびに、楽しかった頃を思い出す。', vn:'Cứ mỗi lần xem bức ảnh này, tôi lại nhớ về khoảng thời gian vui vẻ.'}], quiz: {q:'彼は会う＿＿＿＿、同じ話をする。', options:['うちに','たびに','せいで','あいだに'], correct:1, explain:'Diễn tả một hành động lặp đi lặp lại mỗi khi có một sự kiện khác xảy ra.'} },
+                { id: 'tsui-teshimau', title: '～つい～てしまう', marker: 'つい + Vてしまう', meaning: 'Lỡ làm gì đó (vô thức)', cues: ['Không kiểm soát được'], tip: '💡 Mẹo: Hành động bột phát, không có chủ ý, thường là thói quen xấu hoặc điều đáng tiếc.', examples: [{jp:'ダイエット中なのに、ついケーキを食べてしまった。', vn:'Đang ăn kiêng vậy mà tôi đã lỡ ăn bánh mất rồi.'}], quiz: {q:'面白くて、つい夜遅くまで漫画を＿＿＿＿。', options:['読んでいる','読んでばかりだ','読んでしまった','読まなければならない'], correct:2, explain:'「つい～てしまう」diễn tả hành động lỡ làm, không có chủ ý.'} },
+                { id: 'furi-wo-suru', title: '～ふりをする', marker: 'Thể TT + ふりをする', meaning: 'Giả vờ...', cues: ['Hành động không thật'], tip: '💡 Mẹo: Hành động có ý thức, cố tình tỏ ra một trạng thái không có thật.', examples: [{jp:'彼は聞こえないふりをして、返事をしなかった。', vn:'Anh ta giả vờ không nghe và đã không trả lời.'}], quiz: {q:'田中さんは、知っているのに＿＿＿＿ふりをしている。', options:['知らない','知らないで','知らなくて','知らずに'], correct:0, explain:'Đi với thể thông thường (Vない) trước 「ふり」.'} },
+                { id: 'beki-da', title: '～べきだ', marker: 'Vる + べきだ', meaning: 'Nên làm... (nghĩa vụ, đạo đức)', cues: ['Lời khuyên mạnh'], tip: '💡 Mẹo: Mang tính quy chuẩn xã hội, đạo đức. "Làm người thì nên...". Mạnh hơn ～ほうがいい.', examples: [{jp:'学生はもっと勉強するべきだ。', vn:'Học sinh nên học nhiều hơn nữa.'}], quiz: {q:'約束は＿＿＿＿べきだ。', options:['守る','守って','守れば','守り'], correct:0, explain:'Đi với động từ thể từ điển, mang ý nghĩa nên làm điều đó là đương nhiên.'} },
+                { id: 'temo-kamawanai', title: '～ても構わない', marker: 'Vても/Aくても/Aなでも/Nでも + 構わない', meaning: '...cũng không sao, ...cũng được', cues: ['Cho phép'], tip: '💡 Mẹo: Cách nói cho phép, lịch sự hơn ～てもいい.', examples: [{jp:'おなかがすいたら、先に食べても構いませんよ。', vn:'Nếu đói bụng thì ăn trước cũng không sao đâu.'}], quiz: {q:'この書類は、明日＿＿＿＿構いません。', options:['出して','出しても','出すなら','出すには'], correct:1, explain:'Diễn tả sự cho phép, "nộp vào ngày mai cũng được".'} },
+                { id: 'ni-yoru', title: '～による／によって', marker: 'N + によって', meaning: 'Do, bởi, tùy vào', cues: ['Nguyên nhân', 'Phương tiện', 'Tùy trường hợp'], tip: '💡 Mẹo: Rất đa năng! 1. Nguyên nhân (台風によって). 2. Phương tiện (インターネットによって). 3. Tùy thuộc vào (人によって).', examples: [{jp:'人によって考え方が違う。', vn:'Tùy mỗi người mà cách suy nghĩ khác nhau.'}], quiz: {q:'インターネット＿＿＿＿、世界中の情報を知ることができる。', options:['にとって','によって','について','に対して'], correct:1, explain:'Diễn tả phương tiện, cách thức ("bằng internet").'} },
+                { id: 'ni-series-2', title: 'にとって／について／に対して／に反して', marker: 'N + ～', meaning: 'Đối với / Về / Đối với, trái với / Trái với', cues: ['Quan điểm', 'Chủ đề', 'Đối tượng/Đối lập', 'Ngược lại'], tip: '💡 Mẹo: にとって (đứng trên lập trường ai đó), について/に関して (về chủ đề gì đó), に対して (hướng đến đối tượng nào đó), に反して (trái với dự đoán/quy tắc).', examples: [{jp:'私にとって、これはとても大切な写真です。', vn:'Đối với tôi, đây là bức ảnh rất quan trọng.'}, {jp:'彼の意見に対して、私は反対だ。', vn:'Tôi phản đối ý kiến của anh ấy.'}], quiz: {q:'親の期待＿＿＿＿、彼は大学に行かなかった。', options:['に反して','にこたえて','について','にとって'], correct:0, explain:'Kết quả ngược lại với mong đợi, kỳ vọng.'} }
+            ]
+        },
+        group3: {
+            name: 'Nhóm 3 – Hoàn thiện',
+            items: [
+                { id: 'darake', title: '～だらけ', marker: 'N + だらけ', meaning: 'Toàn là, đầy...', cues: ['Tiêu cực', 'Bụi, bùn, lỗi'], tip: '💡 Mẹo: Luôn mang nghĩa tiêu cực. Dùng cho những thứ không mong muốn bao phủ bề mặt (bùn, bụi, lỗi sai, nợ...).', examples: [{jp:'彼の部屋はゴミだらけだ。', vn:'Phòng anh ta toàn là rác.'}, {jp:'このレポートは間違いだらけで、読みにくい。', vn:'Báo cáo này đầy lỗi nên khó đọc.'}], quiz: {q:'サッカーの試合の後、選手たちは＿＿＿＿だらけになった。', options:['汗','泥','涙','元気'], correct:1, explain:'「だらけ」thường đi với những thứ bẩn, không mong muốn bám vào.'} },
+                { id: 'kke', title: '～っけ', marker: 'Thể た + っけ', meaning: '...ấy nhỉ? (nhớ lại)', cues: ['Xác nhận thông tin đã quên'], tip: '💡 Mẹo: Dùng trong văn nói thân mật, để hỏi lại điều mình không chắc chắn hoặc chợt quên mất.', examples: [{jp:'今日の会議、何時からだっけ？', vn:'Cuộc họp hôm nay từ mấy giờ ấy nhỉ?'}, {jp:'去年、一緒（いっしょ）に旅行（りょこう）に行（い）ったっけ？', vn:'Năm ngoái, chúng ta đã đi du lịch cùng nhau phải không nhỉ?'}], quiz: {q:'試験は来週の月曜日＿＿＿＿？', options:['でしたっけ','ですか','でしょう','でしょうっけ'], correct:0, explain:'Dùng để hỏi xác nhận lại một thông tin không chắc chắn.'} },
+                { id: 'marude-mitai', title: '～まるで～みたいだ', marker: 'まるで + Nの/Vる + ようだ/みたいだ', meaning: 'Cứ như là...', cues: ['Ví von', 'So sánh'], tip: '💡 Mẹo: Luôn đi kèm với まるで. Nhấn mạnh sự so sánh, ví von một cách cường điệu.', examples: [{jp:'合格した！まるで夢のようだ。', vn:'Đỗ rồi! Cứ như là mơ vậy.'}], quiz: {q:'彼女の日本語は、まるで日本人が話している＿＿＿＿上手だ。', options:['みたいに','ように','らしく','っぽく'], correct:1, explain:'「ように」là cách nói trang trọng và phù hợp văn viết hơn 「みたいに」.'} },
+                { id: 'ni-watatte', title: '～にわたって', marker: 'N + にわたって', meaning: 'Trong suốt, trên toàn (không gian, thời gian)', cues: ['Phạm vi rộng'], tip: '💡 Mẹo: Đi với danh từ chỉ thời gian (数時間), không gian (全国), số lần (数回) để nhấn mạnh sự trải dài, rộng khắp.', examples: [{jp:'会議は５日間にわたって行われた。', vn:'Cuộc họp đã diễn ra trong suốt 5 ngày.'}], quiz: {q:'台風の影響で、関東地方＿＿＿＿大雨が降った。', options:['を込めて','に関して','にわたって','について'], correct:2, explain:'Diễn tả phạm vi địa lý rộng lớn.'} },
+                { id: 'wo-komete', title: '～を込めて', marker: 'N + を込めて', meaning: 'Gửi gắm, chứa đựng (tình cảm)', cues: ['Tình yêu', 'Lòng biết ơn'], tip: '💡 Mẹo: Đi với danh từ chỉ cảm xúc, tình cảm (心, 愛, 感謝...).', examples: [{jp:'母の誕生日に、感謝の気持ちを込めてプレゼントを贈った。', vn:'Vào sinh nhật mẹ, tôi đã tặng quà với tất cả lòng biết ơn.'}], quiz: {q:'彼女に、愛を＿＿＿＿手紙を書いた。', options:['込めて','わたって','通して','めぐって'], correct:0, explain:'「を込めて」dùng để diễn tả hành động làm với tất cả tình cảm.'} },
+                { id: 'ni-tsurete', title: '～につれて', marker: 'Vる/N + につれて', meaning: 'Càng... càng...', cues: ['Thay đổi đồng thời'], tip: '💡 Mẹo: A thay đổi thì B cũng thay đổi theo một cách tự nhiên. Tương tự したがって.', examples: [{jp:'試験が近づくにつれて、だんだん心配になってきた。', vn:'Kỳ thi càng đến gần, tôi càng cảm thấy lo lắng.'}], quiz: {q:'年を取る＿＿＿＿、体が弱くなる。', options:['うちに','たびに','につれて','ばかりに'], correct:2, explain:'Diễn tả sự thay đổi diễn ra đồng thời (tuổi tác và sức khỏe).'} },
+                { id: 'ni-tsuki', title: '～につき', marker: 'N + につき', meaning: 'Cứ mỗi / Vì (thông báo)', cues: ['Tỷ lệ', 'Lý do trang trọng'], tip: '💡 Mẹo: Có 2 nghĩa. 1. Tỷ lệ (一人につき). 2. Lý do (thường dùng trong các thông báo trang trọng ở cửa hàng, công ty).', examples: [{jp:'この図書館では、一人につき５冊まで本が借りられる。', vn:'Ở thư viện này, mỗi người được mượn tối đa 5 cuốn sách.'}, {jp:'本日は祝日につき、休業いたします。', vn:'Vì hôm nay là ngày lễ nên chúng tôi xin phép nghỉ.'}], quiz: {q:'工事中＿＿＿＿、ご注意ください。', options:['につき','につれて','にとって','に対して'], correct:0, explain:'Dùng trong thông báo để nêu lý do một cách trang trọng.'} },
+                { id: 'teshouganai', title: '～てしょうがない／てならない', marker: 'Aくて/Aで + てしょうがない', meaning: 'Rất, không chịu được', cues: ['Cảm xúc tự nhiên'], tip: '💡 Mẹo: Nhấn mạnh cảm xúc, cảm giác, mong muốn nảy sinh tự nhiên, không thể kìm nén.', examples: [{jp:'隣の工事がうるさくてしょうがない。', vn:'Công trình bên cạnh ồn ào không thể chịu nổi.'}], quiz: {q:'久しぶりに彼女に会えるので、うれしくて＿＿＿＿。', options:['ほかならない','しょうがない','かまわない','ちがいない'], correct:1, explain:'Nhấn mạnh cảm xúc vui mừng không thể kìm nén được.'} },
+                { id: 'tokoro-datta', title: '～ところだった', marker: 'Vる + ところだった', meaning: 'Suýt nữa thì...', cues: ['May mà không xảy ra'], tip: '💡 Mẹo: Luôn đi với もう少しで, 危なく... Diễn tả một chuyện xấu suýt xảy ra nhưng may mắn là không.', examples: [{jp:'もう少しで、電車に乗り遅れるところだった。', vn:'Chỉ một chút nữa thôi là tôi suýt bị lỡ tàu.'}], quiz: {q:'危なかった。もう少しで車に＿＿＿＿ところだった。', options:['ひかれる','ひかせられる','ひかれている','ひかせる'], correct:0, explain:'Đi với Vる, diễn tả một việc xấu suýt đã xảy ra.'} },
+                { id: 'te-miseru', title: '～てみせる', marker: 'Vて + みせる', meaning: 'Làm cho mà xem (thể hiện quyết tâm)', cues: ['Quyết tâm', 'Chứng tỏ'], tip: '💡 Mẹo: Thể hiện ý chí mạnh mẽ "tôi sẽ làm và cho bạn thấy kết quả!".', examples: [{jp:'今度こそ、必ずN3に合格してみせる。', vn:'Lần này, nhất định tôi sẽ đỗ N3 cho mà xem.'}], quiz: {q:'「できない」なんて言わせない。絶対に＿＿＿＿。', options:['成功するはずだ','成功してみせる','成功するわけがない','成功したらしい'], correct:1, explain:'Thể hiện ý chí và quyết tâm mạnh mẽ sẽ làm được điều gì đó.'} }
+            ]
+        }
+    };
+
+    let state;
+
+    function initialize() {
+        loadState();
+        window.addEventListener('keydown', keyHandler);
+        window.addEventListener('beforeunload', saveState);
+        renderTabs();
+        render();
+    }
+    
+    // --- GEMINI API CALLER & HELPERS (Redacted for brevity, same as previous version) ---
+    async function callGemini(prompt, buttonElement) {
+        const originalText = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<span class="loader"></span> Đang xử lý...';
+        buttonElement.disabled = true;
+    const encodedKey = localStorage.getItem('jMasterApiKey') || "";
+    const apiKey = encodedKey ? atob(encodedKey) : "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            });
+            if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            return text ? text.replace(/\n/g, '<br>') : "Không thể nhận được phản hồi từ AI.";
+        } catch (error) {
+            console.error("Gemini API error:", error);
+            return "Đã xảy ra lỗi khi kết nối đến AI.";
+        } finally {
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+        }
+    }
+    
+    const progressBar = document.getElementById('progress-bar');
+    const statsContainer = document.getElementById('stats');
+    const sidebarContainer = document.getElementById('sidebar');
+    const mainPanelContainer = document.getElementById('main-panel');
+    const surpriseToast = document.getElementById('surprise-toast');
+    const confettiContainer = document.getElementById('confetti-container');
+    const groupTabsContainer = document.getElementById('group-tabs');
+    const headerTitle = document.getElementById('header-title');
+
+    function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+    function saveState() {
+        const stateToSave = { currentGroup: state.currentGroup, orders: state.orders, indices: state.indices, scores: state.scores, streak: state.streak };
+        localStorage.setItem('n3_grammar_state_v3', JSON.stringify(stateToSave));
+    }
+
+    function loadState() {
+        const savedState = localStorage.getItem('n3_grammar_state_v3');
+        state = savedState ? JSON.parse(savedState) : { currentGroup: 'group1', orders: {}, indices: {}, scores: {}, streak: 0 };
+        ['group1', 'group2', 'group3'].forEach(g => {
+            if (!state.orders[g] || state.orders[g].length !== grammarGroups[g].items.length) {
+                state.orders[g] = shuffle([...Array(grammarGroups[g].items.length).keys()]);
+            }
+            state.indices[g] = state.indices[g] || 0;
+            state.scores[g] = state.scores[g] || { correct: 0, total: 0 };
+        });
+    }
+    
+    function switchGroup(groupKey) {
+        state.currentGroup = groupKey;
+        state.mode = 'learn'; state.picked = null; state.result = null;
+        renderTabs(); render();
+    }
+    
+    function renderTabs() {
+        groupTabsContainer.innerHTML = Object.keys(grammarGroups).map(key => `
+            <button onclick="switchGroup('${key}')" class="flex-1 px-3 py-2 text-sm font-bold rounded-lg transition ${state.currentGroup === key ? 'tab-active' : 'bg-white/5 hover:bg-white/10'}">
+                ${grammarGroups[key].name}
+            </button>
+        `).join('');
+    }
+
+    function render() {
+        const group = grammarGroups[state.currentGroup];
+        const groupState = {
+            order: state.orders[state.currentGroup],
+            idx: state.indices[state.currentGroup],
+            score: state.scores[state.currentGroup],
+        };
+        const total = group.items.length;
+        const i = groupState.order[groupState.idx % total];
+        const it = group.items[i];
+        
+        const progress = ((groupState.idx % total) + 1) / total * 100;
+        progressBar.style.width = progress + '%';
+        headerTitle.textContent = `Flow học liên tục — ${group.name}`;
+
+        statsContainer.innerHTML = `
+            <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">Streak: <b>${state.streak}</b></span>
+            <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10">Điểm: <b>${groupState.score.correct}</b>/<b>${groupState.score.total}</b></span>
+            <button onclick="resetCurrentGroup()" class="px-3 py-1 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40">🔀 Làm mới nhóm</button>
+        `;
+
+        sidebarContainer.innerHTML = `
+             <div class="rounded-xl bg-white/5 border border-white/10 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+                <div class="text-xs uppercase tracking-widest text-slate-400">Bài ${ (groupState.idx % total) + 1 } / ${total}</div>
+                <div class="text-lg font-bold">${it.title}</div>
+                <div class="text-sky-300 font-mono text-sm mt-1">${it.marker}</div>
+                <p class="mt-2 text-slate-300">${it.meaning}</p>
+                <div class="flex flex-wrap gap-2 mt-3">${it.cues.map(c => `<span class="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-xs">${c}</span>`).join('')}</div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="setMode('learn')" class="flex-1 px-3 py-1.5 rounded-lg border ${state.mode === 'learn' ? 'bg-indigo-500/30 border-indigo-400/60' : 'bg-white/5 border-white/10 hover:bg-white/10'}">📘 Học</button>
+                    <button onclick="setMode('quiz')" class="flex-1 px-3 py-1.5 rounded-lg border ${state.mode === 'quiz' ? 'bg-indigo-500/30 border-indigo-400/60' : 'bg-white/5 border-white/10 hover:bg-white/10'}">🧪 Quiz</button>
+                </div>
+            </div>
+            <div class="mt-3 rounded-xl bg-white/5 border border-white/10 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+                 <div class="font-bold mb-2">Điều khiển nhanh</div>
+                 <ul class="space-y-1 text-sm text-slate-300">
+                     <li><span class="inline-block text-center w-12 px-2 py-[2px] rounded-md border border-white/30 bg-[#0e1838] font-mono text-[12px]">Space</span> chuyển Học/Quiz</li>
+                     <li><span class="inline-block text-center w-12 px-2 py-[2px] rounded-md border border-white/30 bg-[#0e1838] font-mono text-[12px]">1‑4</span> chọn đáp án</li>
+                     <li><span class="inline-block text-center w-12 px-2 py-[2px] rounded-md border border-white/30 bg-[#0e1838] font-mono text-[12px]">Enter</span> Next khi đúng</li>
+                     <li><span class="inline-block text-center w-12 px-2 py-[2px] rounded-md border border-white/30 bg-[#0e1838] font-mono text-[12px]">←/→</span> lui/tiến mục</li>
+                 </ul>
+            </div>
+        `;
+        
+        if (state.mode === 'learn') {
+            mainPanelContainer.innerHTML = `
+                <div class="rounded-xl bg-white/5 border border-white/10 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+                    <div class="font-semibold mb-2">Ví dụ & giải thích</div>
+                    <div id="examples-container" class="space-y-3">${it.examples.map(ex => `<div class="p-3 rounded-lg bg-white/5 border border-white/10"><div class="font-semibold text-sky-200">${ex.jp}</div><div class="text-slate-300">${ex.vn}</div></div>`).join('')}</div>
+                    <div id="gemini-example-response" class="mt-4"></div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="generateExample(this)" class="px-4 py-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 text-sm flex items-center gap-2">✨ Tạo thêm ví dụ</button>
+                        <button onclick="generateGrammarQuizAI(this)" class="px-4 py-2 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/40 text-sm flex items-center gap-2">🧠 Tạo quiz khó với AI</button>
+                    </div>
+                    <div id="gemini-quiz-response" class="mt-4"></div>
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="prev()" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20">⬅ Trước</button>
+                        <button onclick="next(1)" class="px-4 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40">Tiếp ➜</button>
+                    </div>
+                </div>
+                 <div class="mt-4 rounded-xl bg-white/5 border border-white/10 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+                    <div class="font-semibold mb-2">Mẹo tốc độ</div>
+                    <div class="text-sky-200">${it.tip}</div>
+                </div>`;
+        } else {
+            let optionsHtml = it.quiz.options.map((op, k) => {
+                const isPick = state.picked === k;
+                const isOK = state.result && (k === it.quiz.correct);
+                let btnClass = 'text-left p-3 rounded-lg border transition ';
+                if (state.result) { isOK ? btnClass += 'bg-emerald-500/20 border-emerald-400/50' : isPick ? btnClass += 'bg-rose-500/20 border-rose-400/50' : btnClass += 'bg-white/5 border-white/10';
+                } else { btnClass += isPick ? 'bg-white/10 border-white/30' : 'bg-white/5 border-white/10 hover:bg-white/10'; }
+                return `<button onclick="choose(${k})" class="${btnClass}"><div class="flex items-center gap-2"><span class="px-2 py-[2px] rounded-md border border-white/30 bg-[#0e1838] font-mono text-[12px]">${k+1}</span><span>${op}</span></div></button>`;
+            }).join('');
+            let feedbackHtml = '';
+            if (state.result) {
+                const isCorrect = state.result === 'correct';
+                let wrongAnswerAnalysisButton = !isCorrect ? `<button onclick="analyzeWrongAnswer(this)" class="mt-3 px-3 py-1.5 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-400/40 text-sm flex items-center gap-2">✨ Giải thích lỗi sai</button>` : '';
+                feedbackHtml = `<div class="mt-3 p-3 rounded-lg border ${isCorrect ? 'bg-emerald-500/10 border-emerald-400/40' : 'bg-rose-500/10 border-rose-400/40'}">${isCorrect ? '✅ Chính xác! ' : '❌ Chưa đúng. '}<span class="text-slate-300">${it.quiz.explain}</span>${wrongAnswerAnalysisButton}<div id="gemini-analysis-response" class="mt-3 text-sm"></div></div>`;
+            }
+            mainPanelContainer.innerHTML = `<div class="rounded-xl bg-white/5 border border-white/10 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]"><div class="text-sm uppercase tracking-widest text-slate-400">Quiz nhanh</div><div class="text-lg font-bold mb-3">${it.quiz.q}</div><div class="grid md:grid-cols-2 gap-2">${optionsHtml}</div>${feedbackHtml}<div class="mt-4 flex gap-2"><button onclick="prev()" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20">⬅ Trước</button><button onclick="${state.result === 'correct' ? 'next(1)' : 'setMode(\'learn\')'}" class="px-4 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40">${state.result === 'correct' ? 'Tiếp ➜' : 'Xem lại'}</button></div></div>`;
+        }
+    }
+
+    function next(step=1){ state.indices[state.currentGroup] = (state.indices[state.currentGroup] + step + grammarGroups[state.currentGroup].items.length) % grammarGroups[state.currentGroup].items.length; setMode('learn'); }
+    function prev(){ next(-1); }
+    function setMode(newMode) { state.mode = newMode; state.picked = null; state.result = null; render(); }
+    function resetCurrentGroup() { state.orders[state.currentGroup] = shuffle([...grammarGroups[state.currentGroup].items.keys()]); state.indices[state.currentGroup] = 0; state.scores[state.currentGroup] = { correct: 0, total: 0 }; state.streak = 0; showSurprise(`Đã làm mới ${grammarGroups[state.currentGroup].name} ✨`); render(); }
+
+    function choose(k) {
+        if (state.mode !== 'quiz' || state.result) return;
+        const group = grammarGroups[state.currentGroup];
+        const it = group.items[state.orders[state.currentGroup][state.indices[state.currentGroup] % group.items.length]];
+        state.picked = k;
+        const isCorrect = k === it.quiz.correct;
+        state.result = isCorrect ? 'correct' : 'wrong';
+        state.scores[state.currentGroup].total++;
+        if(isCorrect) {
+            state.scores[state.currentGroup].correct++;
+            state.streak++;
+            showConfetti();
+            if(state.streak > 0 && state.streak % 5 === 0) showSurprise(`🔥 Combo ${state.streak}! Bạn thật xuất sắc!`);
+        } else {
+            state.streak = 0;
+            showSurprise('😺 Không sao! Hãy thử tính năng giải thích lỗi sai nhé.');
+        }
+        render();
+    }
+    
+    async function generateExample(buttonElement) {
+        const it = grammarGroups[state.currentGroup].items[state.orders[state.currentGroup][state.indices[state.currentGroup]]];
+        const prompt = `Bạn là một giáo viên tiếng Nhật. Hãy tạo thêm 2 câu ví dụ mới và thực tế cho mẫu ngữ pháp N3 "${it.title}" (${it.meaning}). Cho mỗi câu, hãy cung cấp câu tiếng Nhật, phiên âm Hiragana, và dịch nghĩa tiếng Việt. Trình bày rõ ràng.`;
+        const responseText = await callGemini(prompt, buttonElement);
+        document.getElementById('gemini-example-response').innerHTML = `<div class="p-3 mt-3 rounded-lg bg-purple-500/10 border border-purple-400/30 gemini-response">${responseText}</div>`;
+    }
+
+    async function generateGrammarQuizAI(buttonElement) {
+        const it = grammarGroups[state.currentGroup].items[state.orders[state.currentGroup][state.indices[state.currentGroup]]];
+        buttonElement.innerHTML = '<span class="loader"></span> Đang tạo quiz...';
+        buttonElement.disabled = true;
+        const encodedKey = localStorage.getItem('jMasterApiKey') || "";
+        const apiKey = encodedKey ? atob(encodedKey) : "";
+        const prompt = `Bạn là một chuyên gia tạo đề thi JLPT N3. Hãy tạo ra 10 câu hỏi trắc nghiệm NGỮ PHÁP thật khó về mẫu "${it.title}" (${it.meaning}). Mỗi câu hỏi phải:
+1. Đặt một câu tiếng Nhật có chỗ trống liên quan đến mẫu này, dùng ngữ cảnh thực tế, từ vựng phong phú, cấu trúc phức tạp.
+2. Đưa ra 4 lựa chọn đáp án (options), chỉ 1 đáp án đúng (correct), các đáp án sai phải gây nhiễu mạnh.
+3. Giải thích ngắn gọn tại sao đáp án đúng là phù hợp nhất.
+4. Dịch nghĩa câu hỏi sang tiếng Việt.
+Trả về kết quả dưới dạng JSON.stringify của một mảng object, mỗi object có:
+{
+  "jp": "Câu hỏi tiếng Nhật có chỗ trống",
+  "vn": "Dịch nghĩa tiếng Việt",
+  "options": ["đáp án 1", "đáp án 2", "đáp án 3", "đáp án 4"],
+  "correct": số thứ tự đáp án đúng (0-3),
+  "explain": "giải thích ngắn gọn"
+}
+Không giải thích gì thêm, chỉ trả về JSON.`;
+        const responseText = await callGemini(prompt, buttonElement);
+        let quizHtml = '';
+        try {
+            const cleaned = responseText.replace(/^```json\s*|```$/g, '');
+            const quizArr = JSON.parse(cleaned);
+            quizHtml = quizArr.map((q, idx) => `
+                <div class="mb-6 p-4 rounded-xl bg-pink-500/10 border border-pink-400/30">
+                    <div class="font-bold text-pink-300 mb-1">Câu ${idx+1}:</div>
+                    <div class="font-semibold text-sky-200">${q.jp}</div>
+                    <div class="text-slate-300 mb-2">${q.vn}</div>
+                    <div class="grid md:grid-cols-2 gap-2 mb-2">
+                        ${q.options.map((op, k) => `<div class="p-2 rounded-lg border ${k===q.correct?'border-emerald-400 bg-emerald-500/10':'border-white/10 bg-white/5'}">${String.fromCharCode(65+k)}. ${op}</div>`).join('')}
+                    </div>
+                    <div class="text-yellow-300 text-sm">Giải thích: ${q.explain}</div>
+                </div>
+            `).join('');
+        } catch(e) {
+            quizHtml = `<div class="p-3 rounded-lg bg-rose-500/10 border border-rose-400/30">Không thể phân tích kết quả từ AI. Dữ liệu:<br>${responseText}</div>`;
+        }
+        document.getElementById('gemini-quiz-response').innerHTML = quizHtml;
+        buttonElement.innerHTML = '🧠 Tạo quiz khó với AI';
+        buttonElement.disabled = false;
+    }
+
+    async function analyzeWrongAnswer(buttonElement) {
+        const group = grammarGroups[state.currentGroup];
+        const it = group.items[state.orders[state.currentGroup][state.indices[state.currentGroup]]];
+        const userAnswer = it.quiz.options[state.picked];
+        const correctAnswer = it.quiz.options[it.quiz.correct];
+        const prompt = `Tôi đang làm một câu hỏi trắc nghiệm ngữ pháp JLPT N3.\nCâu hỏi là: "${it.quiz.q}"\nTôi đã chọn đáp án: "${userAnswer}"\nĐáp án đúng là: "${correctAnswer}"\n\nHãy đóng vai một gia sư AI thân thiện, giải thích cho tôi bằng tiếng Việt tại sao đáp án của tôi (${userAnswer}) lại sai trong ngữ cảnh này, và tại sao đáp án đúng (${correctAnswer}) lại là lựa chọn phù hợp nhất. Giải thích ngắn gọn, tập trung vào bản chất ngữ pháp.`;
+        const responseText = await callGemini(prompt, buttonElement);
+        document.getElementById('gemini-analysis-response').innerHTML = `<div class="p-3 mt-3 rounded-lg bg-yellow-500/10 border border-yellow-400/30 gemini-response">${responseText}</div>`;
+    }
+
+    function showSurprise(message) { surpriseToast.innerHTML = `<div class="px-4 py-2 rounded-xl bg-[#0a142c] border border-white/15 shadow-xl">${message}<button onclick="hideSurprise()" class="ml-3 text-sky-300 underline">Đóng</button></div>`; surpriseToast.classList.remove('opacity-0', 'pointer-events-none'); setTimeout(hideSurprise, 5000); }
+    function hideSurprise() { surpriseToast.classList.add('opacity-0', 'pointer-events-none'); }
+    function showConfetti() { let bitsHtml = ''; for (let i = 0; i < 18; i++) { bitsHtml += `<div style="left:${Math.random()*100}%" class="confetti-bit"><div style="transform:rotate(${Math.random()*360}deg)" class="w-2 h-3 rounded-sm bg-gradient-to-br from-emerald-400 to-sky-400"></div></div>`; } confettiContainer.innerHTML = bitsHtml; setTimeout(() => confettiContainer.innerHTML = '', 1200); }
+
+    function keyHandler(e) {
+        if (['1', '2', '3', '4'].includes(e.key) && state.mode === 'quiz') choose(Number(e.key) - 1);
+        if (e.key === 'ArrowRight') next();
+        if (e.key === 'ArrowLeft') prev();
+        if (e.key === ' ') { e.preventDefault(); setMode(state.mode === 'learn' ? 'quiz' : 'learn'); }
+        if (e.key === 'Enter' && state.result === 'correct') next();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initialize);
+</script>
+</body>
+</html>
+
