@@ -1,0 +1,522 @@
+{
+   "N2 - Bài 11": [
+      {
+         "kanji": "敏感",
+         "reading": "びんかん",
+         "meaning": "Nhạy cảm, mẫn cảm"
+      },
+      {
+         "kanji": "保存",
+         "reading": "ほぞん",
+         "meaning": "Lưu, save file/Bảo quản"
+      },
+      {
+         "kanji": "日課",
+         "reading": "にっか",
+         "meaning": "Thói quen hàng ngày"
+      },
+      {
+         "kanji": "油断",
+         "reading": "ゆだん",
+         "meaning": "Cẩu thả, lơ là"
+      },
+      {
+         "kanji": "分担",
+         "reading": "ぶんたん",
+         "meaning": "Phân chia công việc"
+      },
+      {
+         "kanji": "同情",
+         "reading": "どうじょう",
+         "meaning": "Đồng cảm"
+      },
+      {
+         "kanji": "初歩",
+         "reading": "しょほ",
+         "meaning": "Đánh giá/Có tiếng"
+      },
+      {
+         "kanji": "本物",
+         "reading": "ほんもの",
+         "meaning": "Đồ thật"
+      },
+      {
+         "kanji": "あこがれ",
+         "reading": "あこがれ",
+         "meaning": "Ao ước, ngưỡng mộ"
+      },
+      {
+         "kanji": "転勤",
+         "reading": "てんきん",
+         "meaning": "Chuyển công tác"
+      }
+   ],
+   "N2 - Bài 12": [
+      {
+         "kanji": "栽培",
+         "reading": "さいばい",
+         "meaning": "Trồng trọt"
+      },
+      {
+         "kanji": "動揺",
+         "reading": "どうよう",
+         "meaning": "Bất an"
+      },
+      {
+         "kanji": "かかりつけ",
+         "reading": "かかりつけ",
+         "meaning": "____cá nhân, gia đình"
+      },
+      {
+         "kanji": "特殊",
+         "reading": "とくしゅ",
+         "meaning": "Đặc biệt"
+      },
+      {
+         "kanji": "素材",
+         "reading": "そざい",
+         "meaning": "Nguyên vật liệu"
+      },
+      {
+         "kanji": "充満",
+         "reading": "じゅうまん",
+         "meaning": "Tràn đầy"
+      },
+      {
+         "kanji": "信頼",
+         "reading": "しんらい",
+         "meaning": "Sự tin tưởng, tin cậy"
+      },
+      {
+         "kanji": "尊重",
+         "reading": "そんちょう",
+         "meaning": "Tôn trọng"
+      },
+      {
+         "kanji": "初期",
+         "reading": "しょき",
+         "meaning": "Thời gian đầu"
+      },
+      {
+         "kanji": "欠陥",
+         "reading": "けっかん",
+         "meaning": "Thiếu sót, lỗi"
+      }
+   ],
+   "N2 - Bài 13": [
+      {
+         "kanji": "評価",
+         "reading": "ひょうか",
+         "meaning": "Đánh giá"
+      },
+      {
+         "kanji": "診断",
+         "reading": "しんだん",
+         "meaning": "Chẩn đoán"
+      },
+      {
+         "kanji": "権利",
+         "reading": "けんり",
+         "meaning": "Quyền lợi"
+      },
+      {
+         "kanji": "増大",
+         "reading": "ぞうだい",
+         "meaning": "Tăng lên"
+      },
+      {
+         "kanji": "上達",
+         "reading": "じょうたつ",
+         "meaning": "Tiến bộ"
+      },
+      {
+         "kanji": "視察",
+         "reading": "し さ つ",
+         "meaning": "Thị sát"
+      },
+      {
+         "kanji": "削除",
+         "reading": "さくじょ",
+         "meaning": "Xóa"
+      },
+      {
+         "kanji": "減量",
+         "reading": "げんりょう",
+         "meaning": "Giảm (cân, trọng lượng)"
+      },
+      {
+         "kanji": "整備",
+         "reading": "せ い び",
+         "meaning": "Bảo dưỡng, bảo trì"
+      },
+      {
+         "kanji": "視線",
+         "reading": "し せ ん",
+         "meaning": "Ánh nhìn"
+      }
+   ],
+   "N2 - Bài 14": [
+      {
+         "kanji": "才能",
+         "reading": "さいのう",
+         "meaning": "Tài năng"
+      },
+      {
+         "kanji": "効用",
+         "reading": "こうよう",
+         "meaning": "Hiệu quả"
+      },
+      {
+         "kanji": "効力",
+         "reading": "こうりょく",
+         "meaning": "Hiệu lực"
+      },
+      {
+         "kanji": "避難",
+         "reading": "ひ な ん",
+         "meaning": "Tị nạn, sơ tán"
+      },
+      {
+         "kanji": "盗難",
+         "reading": "とうなん",
+         "meaning": "Vụ cướp, vụ trộm"
+      },
+      {
+         "kanji": "改造",
+         "reading": "かいぞう",
+         "meaning": "Cải tạo, tân trang"
+      },
+      {
+         "kanji": "転換",
+         "reading": "てんかん",
+         "meaning": "Chuyển đổi"
+      },
+      {
+         "kanji": "非難",
+         "reading": "ひ な ん",
+         "meaning": "Chỉ trích, phê phán"
+      },
+      {
+         "kanji": "要所",
+         "reading": "ようしょ",
+         "meaning": "Điểm quan trọng"
+      },
+      {
+         "kanji": "展開",
+         "reading": "てんかい",
+         "meaning": "Diễn biến (phim, truyện) /Mở rộng"
+      }
+   ],
+   "N2 - Bài 15": [
+      {
+         "kanji": "解放",
+         "reading": "かいほう",
+         "meaning": "Giải phóng"
+      },
+      {
+         "kanji": "退出",
+         "reading": "たいしゅつ",
+         "meaning": "Thoát ra, rời khỏi"
+      },
+      {
+         "kanji": "意図",
+         "reading": "い と",
+         "meaning": "Ý đồ, mục đích"
+      },
+      {
+         "kanji": "根気",
+         "reading": "こ ん き",
+         "meaning": "Kiên nhẫn"
+      },
+      {
+         "kanji": "統一",
+         "reading": "とういつ",
+         "meaning": "Thống nhất"
+      },
+      {
+         "kanji": "特定",
+         "reading": "とくてい",
+         "meaning": "Xác định rõ"
+      },
+      {
+         "kanji": "容姿",
+         "reading": "よ う し",
+         "meaning": "Diện mạo,  dáng vẻ bề ngoài"
+      },
+      {
+         "kanji": "発想",
+         "reading": "はっそう",
+         "meaning": "Ý tưởng"
+      },
+      {
+         "kanji": "仮定",
+         "reading": "か て い",
+         "meaning": "Giả định"
+      },
+      {
+         "kanji": "目印",
+         "reading": "めじるし",
+         "meaning": "Mốc chỉ đường"
+      }
+   ],
+   "N2 - Bài 16": [
+      {
+         "kanji": "対応",
+         "reading": "たいおう",
+         "meaning": "Xử lý (với khách)"
+      },
+      {
+         "kanji": "特徴",
+         "reading": "とくちょう",
+         "meaning": "Đặc trưng"
+      },
+      {
+         "kanji": "向こう",
+         "reading": "む こう",
+         "meaning": "Phía trước; phía đối diện Hướng"
+      },
+      {
+         "kanji": "引用",
+         "reading": "いんよう",
+         "meaning": "Trích dẫn"
+      },
+      {
+         "kanji": "吸収",
+         "reading": "きゅうしゅう",
+         "meaning": "Hấp thu (dinh dưỡng) Thấm hút (mồ hôi) Tiếp thu"
+      },
+      {
+         "kanji": "性能",
+         "reading": "せいのう",
+         "meaning": "Tính năng"
+      },
+      {
+         "kanji": "得点",
+         "reading": "とくてん",
+         "meaning": "Sự ghi điểm, điểm số"
+      },
+      {
+         "kanji": "予報",
+         "reading": "よ ほ う",
+         "meaning": "Dự báo"
+      },
+      {
+         "kanji": "実現",
+         "reading": "じつげん",
+         "meaning": "Thực hiện"
+      },
+      {
+         "kanji": "達成",
+         "reading": "たっせい",
+         "meaning": "Đạt được"
+      }
+   ],
+   "N2 - Bài 17": [
+      {
+         "kanji": "対比",
+         "reading": "たいひ",
+         "meaning": "So sánh"
+      },
+      {
+         "kanji": "大別",
+         "reading": "たいべつ",
+         "meaning": "Cách biệt lớn"
+      },
+      {
+         "kanji": "伝染",
+         "reading": "でんせん",
+         "meaning": "Truyền nhiễm"
+      },
+      {
+         "kanji": "選出",
+         "reading": "せんしゅつ",
+         "meaning": "Chọn ra"
+      },
+      {
+         "kanji": "寄付",
+         "reading": "き ふ",
+         "meaning": "Quyên góp"
+      },
+      {
+         "kanji": "先端",
+         "reading": "せんたん",
+         "meaning": "Mũi nhọn, đầu mút Tiên tiến"
+      },
+      {
+         "kanji": "表現",
+         "reading": "ひょうげん",
+         "meaning": "Biểu hiện"
+      },
+      {
+         "kanji": "明示",
+         "reading": "め い じ",
+         "meaning": "Biểu hiện rõ"
+      },
+      {
+         "kanji": "専属",
+         "reading": "せんぞく",
+         "meaning": "Chuyên ngành, độc quyền"
+      },
+      {
+         "kanji": "孤立",
+         "reading": "こ り つ",
+         "meaning": "Cô lập, độc lập"
+      }
+   ],
+   "N2 - Bài 18": [
+      {
+         "kanji": "分別",
+         "reading": "ぶんべつ",
+         "meaning": "Phân loại (Rác)"
+      },
+      {
+         "kanji": "区分",
+         "reading": "く ぶ ん",
+         "meaning": "Phân ra, chia ra  (công việc)"
+      },
+      {
+         "kanji": "現状",
+         "reading": "げんじょう",
+         "meaning": "Hiện trạng"
+      },
+      {
+         "kanji": "移行",
+         "reading": "い こ う",
+         "meaning": "Di chuyển"
+      },
+      {
+         "kanji": "移住",
+         "reading": "いじゅう",
+         "meaning": "Di trú, di cư"
+      },
+      {
+         "kanji": "養成",
+         "reading": "ようせい",
+         "meaning": "Đào tạo, nuôi dưỡng"
+      },
+      {
+         "kanji": "考慮",
+         "reading": "こうりょ",
+         "meaning": "Sự xem xét, suy tính"
+      },
+      {
+         "kanji": "測定",
+         "reading": "そくてい",
+         "meaning": "Đo đạc"
+      },
+      {
+         "kanji": "提案",
+         "reading": "ていあん",
+         "meaning": "Đề án"
+      },
+      {
+         "kanji": "信仰",
+         "reading": "しんこう",
+         "meaning": "Tín ngưỡng"
+      }
+   ],
+   "N2 - Bài 19": [
+      {
+         "kanji": "定着",
+         "reading": "ていちゃく",
+         "meaning": "Định hình"
+      },
+      {
+         "kanji": "愛情",
+         "reading": "あいじょう",
+         "meaning": "Tình yêu thương"
+      },
+      {
+         "kanji": "判断",
+         "reading": "はんだん",
+         "meaning": "Phán đoán, đánh giá"
+      },
+      {
+         "kanji": "凸凹",
+         "reading": "でこぼこ",
+         "meaning": "Lồi lõm"
+      },
+      {
+         "kanji": "教育",
+         "reading": "きょういく",
+         "meaning": "Giáo dục"
+      },
+      {
+         "kanji": "大臣",
+         "reading": "だいじん",
+         "meaning": "Bộ trưởng"
+      },
+      {
+         "kanji": "やる気",
+         "reading": "やる き",
+         "meaning": "Hứng thú"
+      },
+      {
+         "kanji": "指摘",
+         "reading": "し て き",
+         "meaning": "Chỉ ra"
+      },
+      {
+         "kanji": "決勝戦",
+         "reading": "けっしょうせん",
+         "meaning": "Trận chung kết"
+      },
+      {
+         "kanji": "活気",
+         "reading": "か っ き",
+         "meaning": "Sự hoạt bát, sức sống"
+      }
+   ],
+   "N2 - Bài 20": [
+      {
+         "kanji": "放映",
+         "reading": "ほうえい",
+         "meaning": "Sự phát sóng (một bộ phim...)"
+      },
+      {
+         "kanji": "採用",
+         "reading": "さいよう",
+         "meaning": "Tuyển dụng"
+      },
+      {
+         "kanji": "進出",
+         "reading": "しんしゅつ",
+         "meaning": "Vươn ra/Sự tiến lên"
+      },
+      {
+         "kanji": "俳優",
+         "reading": "はいゆう",
+         "meaning": "Diễn viên"
+      },
+      {
+         "kanji": "組織",
+         "reading": "そ し き",
+         "meaning": "Tổ chức/ Hệ thống"
+      },
+      {
+         "kanji": "真夏",
+         "reading": "ま な つ",
+         "meaning": "Giữa mùa hè"
+      },
+      {
+         "kanji": "政党",
+         "reading": "せいとう",
+         "meaning": "Chính đảng, Đảng"
+      },
+      {
+         "kanji": "退場",
+         "reading": "たいじょう",
+         "meaning": "Sự rời khỏi (trận đấu, hội trường)"
+      },
+      {
+         "kanji": "拡大",
+         "reading": "かくだい",
+         "meaning": "Sự mở rộng, lan rộng"
+      },
+      {
+         "kanji": "向上",
+         "reading": "こうじょう",
+         "meaning": "Sự tăng cường, nâng cao, tiến triển"
+      }
+   ]
+}
