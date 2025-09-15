@@ -7,6 +7,8 @@ window.getLang = getLang;
 window.saveLang = saveLang;
 window.getStorageWarning = getStorageWarning;
 window.saveStorageWarning = saveStorageWarning;
+window.getSpeechLang = getSpeechLang;
+window.saveSpeechLang = saveSpeechLang;
 
 // --- API KEY ---
 const API_KEY_STORAGE = 'jMasterApiKey';
@@ -65,4 +67,13 @@ function getStorageWarning() {
 }
 function saveStorageWarning(val) {
     localStorage.setItem(STORAGE_WARNING, val ? 'true' : 'false');
+}
+
+// --- SPEECH LANGUAGE ---
+const SPEECH_LANG_STORAGE = 'jMasterSpeechLang';
+function getSpeechLang() {
+    return localStorage.getItem(SPEECH_LANG_STORAGE) || 'ja-JP';
+}
+function saveSpeechLang(lang) {
+    localStorage.setItem(SPEECH_LANG_STORAGE, lang);
 }

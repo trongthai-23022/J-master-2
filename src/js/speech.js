@@ -1,5 +1,5 @@
 // Web Speech API usage example: Phát âm tiếng Nhật
-function speakJapanese(text, lang = 'ja') {
+function speakText(text, lang = 'ja-JP') {
     if (!('speechSynthesis' in window)) {
         if (!window.speechApiNotified) {
             window.showToast('Trình duyệt không hỗ trợ phát âm.', 'error');
@@ -8,10 +8,12 @@ function speakJapanese(text, lang = 'ja') {
         return;
     }
     const utter = new window.SpeechSynthesisUtterance(text);
-    utter.lang = lang === 'en' ? 'en-US' : 'ja-JP';
+    utter.lang = lang;
     window.speechSynthesis.speak(utter);
 }
 
+window.speakText = speakText;
+
 // Ví dụ sử dụng:
-// speakJapanese('こんにちは'); // Phát âm "Xin chào" bằng tiếng Nhật
-// speakJapanese('Hello', 'en'); // Phát âm "Hello" bằng tiếng Anh
+// speakText('こんにちは'); // Phát âm "Xin chào" bằng tiếng Nhật
+// speakText('Hello', 'en-US'); // Phát âm "Hello" bằng tiếng Anh

@@ -111,11 +111,13 @@ function openSettingsModal() {
     const currentTheme = window.getTheme();
     const currentApiKey = window.getApiKey();
     const currentWarning = window.getStorageWarning();
+    const currentSpeechLang = window.getSpeechLang();
 
     document.getElementById('settings-lang').value = currentLang;
     document.getElementById('settings-theme').value = currentTheme;
     document.getElementById('api-key-input').value = currentApiKey;
     document.getElementById('settings-storage-warning').checked = currentWarning;
+    document.getElementById('settings-speech-lang').value = currentSpeechLang;
 
     showModal('modal-settings');
 }
@@ -125,11 +127,13 @@ function handleSaveSettings() {
     const newTheme = document.getElementById('settings-theme').value;
     const newApiKey = document.getElementById('api-key-input').value;
     const newWarning = document.getElementById('settings-storage-warning').checked;
+    const newSpeechLang = document.getElementById('settings-speech-lang').value;
 
     window.saveLang(newLang);
     window.saveTheme(newTheme);
     window.saveApiKey(newApiKey);
     window.saveStorageWarning(newWarning);
+    window.saveSpeechLang(newSpeechLang);
 
     hideModals();
     window.showToast('Đã lưu cài đặt!', 'success');

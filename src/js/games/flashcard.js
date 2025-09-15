@@ -10,11 +10,11 @@ if (!window.shuffle) {
   };
 }
 if (!window.speakJapanese) {
-  window.speakJapanese = (text) => {
-    console.log(`Phát âm: ${text}`);
+  window.speakJapanese = (text, lang) => {
+    console.log(`Phát âm: ${text} (${lang})`);
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
+      utterance.lang = lang || 'ja-JP';
       speechSynthesis.speak(utterance);
     }
   };
@@ -51,8 +51,13 @@ function startFlashcardGame(wordList, container) {
   const speakNow = () => {
     if (!state.autoSpeak || typeof window.speakJapanese !== 'function') return;
     const word = state.cards[state.currentIndex];
-    const text = word.reading || word.kanji || '';
-    if (text) window.speakJapanese(text);
+    const speechLang = window.getSpeechLang ? window.getSpeechLang() : 'ja';
+    const textToSpeak = word.kanji;
+    if (textToSpeak) {
+        console.log(`Phát âm: ${textToSpeak} (${speechLang})`);
+        
+        window.speakJapanese(textToSpeak, speechLang);
+    }
   };
 
   const flipCard = (shouldBeFlipped) => {

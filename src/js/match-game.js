@@ -12,16 +12,15 @@ if (!window.shuffle) {
 }
 if (!window.speakJapanese) {
   //get lang from argument
-  window.speakJapanese = (text) => {
-    console.log(`Phát âm: ${text}`);
-    if ('speechSynthesis' in window) {
+  window.speakJapanese = (text, lang) => {
+    console.log(`Phát âm: ${text} (${lang})`);
+    if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
+      utterance.lang = lang || "ja-JP";
       speechSynthesis.speak(utterance);
     }
   };
 }
-
 
 /**
  * Hàm chính để khởi tạo Match Game, bao gồm cả màn hình cài đặt.
@@ -102,22 +101,26 @@ function renderSettingsScreen(wordList, container) {
   `;
 
   // --- Logic cho màn hình cài đặt ---
-  const pairCountSelect = container.querySelector('#pair-count');
+  const pairCountSelect = container.querySelector("#pair-count");
   const maxPairs = wordList.length;
   // Các tùy chọn số cặp thẻ, đảm bảo không vượt quá số từ có sẵn
-  [4, 6, 8, 10, 12].forEach(opt => {
+  [4, 6, 8, 10, 12].forEach((opt) => {
     if (opt <= maxPairs) {
-      pairCountSelect.innerHTML += `<option value="${opt}">${opt} cặp (${opt * 2} thẻ)</option>`;
+      pairCountSelect.innerHTML += `<option value="${opt}">${opt} cặp (${
+        opt * 2
+      } thẻ)</option>`;
     }
   });
   // Luôn thêm tùy chọn "Tất cả"
   if (maxPairs > 0) {
-    pairCountSelect.innerHTML += `<option value="${maxPairs}">Tất cả ${maxPairs} cặp (${maxPairs * 2} thẻ)</option>`;
+    pairCountSelect.innerHTML += `<option value="${maxPairs}">Tất cả ${maxPairs} cặp (${
+      maxPairs * 2
+    } thẻ)</option>`;
     pairCountSelect.value = Math.min(maxPairs, 8); // Mặc định là 8 cặp hoặc tối đa
   }
 
   // Gắn sự kiện cho nút "Bắt đầu chơi"
-  container.querySelector('#start-game-btn').addEventListener('click', () => {
+  container.querySelector("#start-game-btn").addEventListener("click", () => {
     const settings = {
       cardA: container.querySelector('input[name="cardA"]:checked').value,
       cardB: container.querySelector('input[name="cardB"]:checked').value,
@@ -143,11 +146,13 @@ function startGamePlay(wordList, container, settings) {
     seconds: 0,
     timerInterval: null,
   };
-  
+
   // Chuẩn bị dữ liệu game dựa trên settings
-  const selectedWords = window.shuffle([...wordList]).slice(0, state.totalPairs);
+  const selectedWords = window
+    .shuffle([...wordList])
+    .slice(0, state.totalPairs);
   let gameCardsData = [];
-  selectedWords.forEach(word => {
+  selectedWords.forEach((word) => {
     gameCardsData.push({ item: word, type: settings.cardA });
     gameCardsData.push({ item: word, type: settings.cardB });
   });
@@ -167,79 +172,98 @@ function startGamePlay(wordList, container, settings) {
     </div>
   `;
 
-  const gameBoard = container.querySelector('#game-board');
-  const timerEl = container.querySelector('#timer');
-  const matchedPairsEl = container.querySelector('#matched-pairs');
+  const gameBoard = container.querySelector("#game-board");
+  const timerEl = container.querySelector("#timer");
+  const matchedPairsEl = container.querySelector("#matched-pairs");
 
   // Hàm tạo một thẻ bài
   function createCardElement(cardData) {
-    const card = document.createElement('div');
-    card.className = 'game-card';
+    const card = document.createElement("div");
+    card.className = "game-card";
     card.dataset.id = cardData.item.id;
     card.dataset.reading = cardData.item.reading; // Lưu cách đọc để phát âm
-    
+    card.dataset.kanji = cardData.item.kanji; // Đảm bảo thuộc tính kanji được gán
+
     const audioIcon = `<svg class="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>`;
-    
+
     const contentMap = {
-      'kanji': `<span class="jp-font text-xl sm:text-2xl font-bold pointer-events-none">${cardData.item.kanji}</span>`,
-      'reading': `<span class="jp-font text-base sm:text-xl pointer-events-none">${cardData.item.reading}</span>`,
-      'meaning': `<span class="text-xs sm:text-sm font-medium pointer-events-none">${cardData.item.meaning}</span>`,
-      'audio': audioIcon,
+      kanji: `<span class="jp-font text-xl sm:text-2xl font-bold pointer-events-none">${cardData.item.kanji}</span>`,
+      reading: `<span class="jp-font text-base sm:text-xl pointer-events-none">${cardData.item.reading}</span>`,
+      meaning: `<span class="text-xs sm:text-sm font-medium pointer-events-none">${cardData.item.meaning}</span>`,
+      audio: audioIcon,
     };
-    card.innerHTML = contentMap[cardData.type] || '';
+    card.innerHTML = contentMap[cardData.type] || "";
     return card;
   }
-  
+
   // Hàm xử lý click thẻ
   function handleCardClick(e) {
-      const clickedCard = e.target.closest('.game-card');
-      if (!clickedCard || state.isChecking || clickedCard.classList.contains('is-matched') || clickedCard === state.selectedCard) return;
+    const clickedCard = e.target.closest(".game-card");
+    if (
+      !clickedCard ||
+      state.isChecking ||
+      clickedCard.classList.contains("is-matched") ||
+      clickedCard === state.selectedCard
+    )
+      return;
 
-      // Phát âm khi click
-      if (clickedCard.dataset.reading) window.speakJapanese(clickedCard.dataset.reading);
+    // Phát âm khi click
+    const kanji = clickedCard.dataset.kanji;
+    const reading = clickedCard.dataset.reading;
+    const meaning = clickedCard.dataset.meaning;
+    const speechLang = window.getSpeechLang ? window.getSpeechLang() : "ja-JP";
+    console.log(
+      `kanji: ${kanji}, reading: ${reading}, meaning: ${meaning}, speechLang: ${speechLang}`
+    );
 
-      if (!state.selectedCard) {
-          state.selectedCard = clickedCard;
-          state.selectedCard.classList.add('is-selected');
-      } else {
-          state.isChecking = true;
-          clickedCard.classList.add('is-selected');
-          if (state.selectedCard.dataset.id === clickedCard.dataset.id) {
-              setTimeout(() => {
-                  state.selectedCard.classList.add('is-matched');
-                  clickedCard.classList.add('is-matched');
-                  state.selectedCard.classList.remove('is-selected');
-                  clickedCard.classList.remove('is-selected');
-                  state.selectedCard = null; state.isChecking = false;
-                  state.matchedPairs++;
-                  matchedPairsEl.textContent = state.matchedPairs;
-                  if (state.matchedPairs === state.totalPairs) {
-                      clearInterval(state.timerInterval);
-                      renderResultsScreen(wordList, container, state);
-                  }
-              }, 500);
-          } else {
-              setTimeout(() => {
-                  state.selectedCard.classList.add('is-wrong');
-                  clickedCard.classList.add('is-wrong');
-                  setTimeout(() => {
-                      state.selectedCard.classList.remove('is-selected', 'is-wrong');
-                      clickedCard.classList.remove('is-selected', 'is-wrong');
-                      state.selectedCard = null; state.isChecking = false;
-                  }, 800);
-              }, 400);
+    window.speakJapanese(kanji, speechLang);
+
+    if (!state.selectedCard) {
+      state.selectedCard = clickedCard;
+      state.selectedCard.classList.add("is-selected");
+    } else {
+      state.isChecking = true;
+      clickedCard.classList.add("is-selected");
+      if (state.selectedCard.dataset.id === clickedCard.dataset.id) {
+        setTimeout(() => {
+          state.selectedCard.classList.add("is-matched");
+          clickedCard.classList.add("is-matched");
+          state.selectedCard.classList.remove("is-selected");
+          clickedCard.classList.remove("is-selected");
+          state.selectedCard = null;
+          state.isChecking = false;
+          state.matchedPairs++;
+          matchedPairsEl.textContent = state.matchedPairs;
+          if (state.matchedPairs === state.totalPairs) {
+            clearInterval(state.timerInterval);
+            renderResultsScreen(wordList, container, state);
           }
+        }, 500);
+      } else {
+        setTimeout(() => {
+          state.selectedCard.classList.add("is-wrong");
+          clickedCard.classList.add("is-wrong");
+          setTimeout(() => {
+            state.selectedCard.classList.remove("is-selected", "is-wrong");
+            clickedCard.classList.remove("is-selected", "is-wrong");
+            state.selectedCard = null;
+            state.isChecking = false;
+          }, 800);
+        }, 400);
       }
+    }
   }
 
   // Tạo và gắn các thẻ bài vào game board
-  shuffledCards.forEach(cardData => gameBoard.appendChild(createCardElement(cardData)));
-  gameBoard.addEventListener('click', handleCardClick);
+  shuffledCards.forEach((cardData) =>
+    gameBoard.appendChild(createCardElement(cardData))
+  );
+  gameBoard.addEventListener("click", handleCardClick);
 
   // Bắt đầu đếm giờ
   state.timerInterval = setInterval(() => {
-      state.seconds++;
-      timerEl.textContent = state.seconds;
+    state.seconds++;
+    timerEl.textContent = state.seconds;
   }, 1000);
 }
 
@@ -247,7 +271,7 @@ function startGamePlay(wordList, container, settings) {
  * Render màn hình kết quả khi chơi xong.
  */
 function renderResultsScreen(wordList, container, gameState) {
-    container.innerHTML = `
+  container.innerHTML = `
       <div class="text-center p-8 animate-fade-in">
         <h2 class="text-4xl font-bold text-green-600 mb-4">Hoàn thành!</h2>
         <p class="text-xl mb-2">Thời gian của bạn: <span class="font-bold">${gameState.seconds}</span> giây.</p>
@@ -259,17 +283,23 @@ function renderResultsScreen(wordList, container, gameState) {
       </div>
     `;
 
-    container.querySelector('#play-again-btn').addEventListener('click', () => {
-      // Chơi lại với cùng cài đặt
-      const settings = {
-        cardA: container.querySelector('input[name="cardA"]:checked')?.value || 'kanji',
-        cardB: container.querySelector('input[name="cardB"]:checked')?.value || 'meaning',
-        pairCount: gameState.totalPairs,
-      };
-      startGamePlay(wordList, container, settings);
-    });
+  container.querySelector("#play-again-btn").addEventListener("click", () => {
+    // Chơi lại với cùng cài đặt
+    const settings = {
+      cardA:
+        container.querySelector('input[name="cardA"]:checked')?.value ||
+        "kanji",
+      cardB:
+        container.querySelector('input[name="cardB"]:checked')?.value ||
+        "meaning",
+      pairCount: gameState.totalPairs,
+    };
+    startGamePlay(wordList, container, settings);
+  });
 
-    container.querySelector('#change-settings-btn').addEventListener('click', () => {
+  container
+    .querySelector("#change-settings-btn")
+    .addEventListener("click", () => {
       // Quay về màn hình cài đặt
       renderSettingsScreen(wordList, container);
     });
