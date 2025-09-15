@@ -56,6 +56,7 @@ function renderVocabLists() {
             <div class="word-item grid grid-cols-3 md:grid-cols-4 items-center gap-4 border-b md:border-t-0 py-2">
                 <div class="font-semibold col-span-2 md:col-span-1">
                     <strong class="jp-font">${word.kanji || ''}</strong>
+                    <div class="block md:hidden text-xs text-gray-700 mt-1">${word.reading || ''}</div>
                 </div>
                 <div class="hidden md:block text-sm text-gray-700">${word.reading || ''}</div>
                 <div class="text-sm text-gray-700 col-span-1">${word.meaning || ''}</div>
